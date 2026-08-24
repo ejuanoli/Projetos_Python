@@ -2,7 +2,7 @@
 RPA Apple para GitHub Actions.
 Cópia do RPA_Apple.py sem interface gráfica, sem SharePoint, sem
 consolidação/tratamento de Excel. Baixa os relatórios Brudam (embarque +
-detalhado) e TSMS (xls) e envia os arquivos por e-mail Outlook para
+detalhado) e TSMS (xls) e envia os arquivos por e-mail Gmail para
 eduardojuan@dhl.com.
 
 Credenciais vêm de variáveis de ambiente (GitHub Secrets), nunca do código.
@@ -34,9 +34,7 @@ URL_LISTA_NOTAS = "https://dhl.brudam.com.br/sac/lista_notas.php"
 URL_TSMS = "https://brasillogic.com.br/tsms/logtrack/index.php#"
 
 EMAIL_DESTINO = os.environ.get("EMAIL_DESTINO", "eduardojuan@dhl.com").strip()
-OUTLOOK_REMETENTE = os.environ.get(
-    "OUTLOOK_USER", "PETASL.ProcessAssistant@dhl.com"
-).strip() or "PETASL.ProcessAssistant@dhl.com"
+GMAIL_REMETENTE = os.environ.get("GMAIL_USER", "ejuan36616@gmail.com").strip() or "ejuan36616@gmail.com"
 
 _BASE = Path(os.environ.get("GITHUB_WORKSPACE") or os.getcwd()).resolve()
 PASTA_DESTINO = Path(os.environ.get("RPA_PASTA_DESTINO") or (_BASE / "saida_rpa_apple"))
@@ -99,6 +97,11 @@ def _criar_opcoes_chrome() -> Options:
     opcoes.add_argument("--no-sandbox")
     opcoes.add_argument("--disable-dev-shm-usage")
     opcoes.add_argument("--ignore-certificate-errors")
+    opcoes.add_argument("--disable-blink-features=AutomationControlled")
+    opcoes.add_argument(
+        "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    )
     opcoes.add_experimental_option("prefs", {
         "download.default_directory": destino,
         "download.prompt_for_download": False,
@@ -253,6 +256,61 @@ def _guardar_download(origem: str, prefixo: str) -> Path:
     return destino
 
 
+def _salvar_diagnostico(driver, etapa: str) -> None:
+    """Grava screenshot + HTML para o artifact do Actions."""
+    PASTA_DESTINO.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    try:
+        url = driver.current_url
+        titulo = driver.title
+    except Exception:
+        url, titulo = "?", "?"
+    _log(f"Diagnóstico {etapa}: URL={url} | título={titulo}", "aviso")
+    png = PASTA_DESTINO / f"diagnostico_{etapa}_{stamp}.png"
+    html = PASTA_DESTINO / f"diagnostico_{etapa}_{stamp}.html"
+    try:
+        driver.save_screenshot(str(png))
+        _log(f"Screenshot: {png.name}", "info")
+    except Exception as e:
+        _log(f"Não foi possível salvar screenshot: {e}", "aviso")
+    try:
+        html.write_text(driver.page_source or "", encoding="utf-8")
+        _log(f"HTML: {html.name}", "info")
+    except Exception as e:
+        _log(f"Não foi possível salvar HTML: {e}", "aviso")
+
+
+def _focar_login_brudam(driver, wait: WebDriverWait) -> None:
+    """Acha #user no documento ou em qualquer iframe (o Actions vê iframes extras)."""
+    driver.switch_to.default_content()
+    time.sleep(2)
+    if driver.find_elements(By.ID, "user"):
+        _log("Login Brudam no documento principal.", "info")
+        return
+
+    iframes = driver.find_elements(By.TAG_NAME, "iframe")
+    _log(
+        f"Campo #user não está no documento principal. {len(iframes)} iframe(s).",
+        "info",
+    )
+    for i, iframe in enumerate(iframes):
+        driver.switch_to.default_content()
+        try:
+            driver.switch_to.frame(iframe)
+        except Exception:
+            continue
+        if driver.find_elements(By.ID, "user"):
+            _log(f"Login Brudam encontrado no iframe {i}.", "ok")
+            return
+
+    driver.switch_to.default_content()
+    try:
+        _log(f"URL atual: {driver.current_url} | título: {driver.title}", "aviso")
+    except Exception:
+        pass
+    wait.until(EC.presence_of_element_located((By.ID, "user")))
+
+
 def _preencher_campo_data(driver, campo, valor: str) -> None:
     driver.execute_script("arguments[0].removeAttribute('readonly')", campo)
     driver.execute_script("arguments[0].value = '';", campo)
@@ -270,13 +328,8 @@ def _exportar_brudam(driver, wait: WebDriverWait) -> list[Path]:
 
     _log("Etapa 1/2: Brudam DHL", "etapa")
     driver.get(URL_LOGIN)
-    time.sleep(3)
-
-    iframes = driver.find_elements(By.TAG_NAME, "iframe")
-    if iframes:
-        _log(f"Encontrado(s) {len(iframes)} iframe(s). Entrando no primeiro...", "info")
-        driver.switch_to.frame(iframes[0])
-        time.sleep(1)
+    time.sleep(5)
+    _focar_login_brudam(driver, wait)
 
     campo_usuario = wait.until(EC.presence_of_element_located((By.ID, "user")))
     campo_usuario.clear()
@@ -478,9 +531,10 @@ def _exportar_tsms(driver, wait: WebDriverWait) -> list[Path]:
 
 
 def _enviar_email_smtp(anexos: list[Path], assunto: str, corpo: str) -> None:
-    remetente = OUTLOOK_REMETENTE
-    senha = _credencial("OUTLOOK_PASSWORD", "SMTP_PASSWORD")
-    servidor = os.environ.get("SMTP_SERVER", "smtp.office365.com").strip()
+    remetente = GMAIL_REMETENTE or _credencial("GMAIL_USER")
+    senha = _credencial("GMAIL_APP_PASSWORD", "GMAIL_PASSWORD")
+    senha = senha.replace(" ", "")
+    servidor = os.environ.get("SMTP_SERVER", "smtp.gmail.com").strip()
     porta = int(os.environ.get("SMTP_PORT", "587"))
 
     msg = EmailMessage()
@@ -501,10 +555,50 @@ def _enviar_email_smtp(anexos: list[Path], assunto: str, corpo: str) -> None:
         )
 
     contexto = ssl.create_default_context()
-    with smtplib.SMTP(servidor, porta, timeout=60) as smtp:
-        smtp.starttls(context=contexto)
-        smtp.login(remetente, senha)
-        smtp.send_message(msg)
+    try:
+        with smtplib.SMTP(servidor, porta, timeout=60) as smtp:
+            smtp.starttls(context=contexto)
+            smtp.login(remetente, senha)
+            smtp.send_message(msg)
+    except smtplib.SMTPAuthenticationError as e:
+        raise RuntimeError(
+            "Gmail recusou o login SMTP. Use uma senha de app (não a senha "
+            "normal da conta): Google Account → Segurança → Verificação em "
+            "duas etapas → Senhas de app. Grave essa senha no secret "
+            "GMAIL_APP_PASSWORD (16 caracteres, pode colar com ou sem espaços)."
+        ) from e
+    _log(f"E-mail enviado para {EMAIL_DESTINO} (de {remetente})", "ok")
+
+    msg = EmailMessage()
+    msg["Subject"] = assunto
+    msg["From"] = remetente
+    msg["To"] = EMAIL_DESTINO
+    msg.set_content(corpo)
+    for path in anexos:
+        dados = path.read_bytes()
+        maintype, subtype = ("application", "octet-stream")
+        if path.suffix.lower() == ".csv":
+            maintype, subtype = "text", "csv"
+        msg.add_attachment(
+            dados,
+            maintype=maintype,
+            subtype=subtype,
+            filename=path.name,
+        )
+
+    contexto = ssl.create_default_context()
+    try:
+        with smtplib.SMTP(servidor, porta, timeout=60) as smtp:
+            smtp.starttls(context=contexto)
+            smtp.login(remetente, senha)
+            smtp.send_message(msg)
+    except smtplib.SMTPAuthenticationError as e:
+        raise RuntimeError(
+            "O Microsoft 365 da DHL bloqueou SMTP com senha (535 basic auth "
+            "disabled). Sem Graph, o e-mail não sai da nuvem até o TI habilitar "
+            "SMTP AUTH nessa caixa. Baixe os arquivos no artifact "
+            "'relatorios-rpa-apple' desta execução do Actions."
+        ) from e
     _log(f"E-mail Outlook enviado para {EMAIL_DESTINO} (de {remetente})", "ok")
 
 
@@ -542,7 +636,7 @@ def main() -> int:
     try:
         driver = webdriver.Chrome(options=_criar_opcoes_chrome())
         _aplicar_pasta_download_chrome(driver)
-        wait = WebDriverWait(driver, 30)
+        wait = WebDriverWait(driver, 45)
         _log("Navegador aberto.", "ok")
 
         try:
@@ -550,6 +644,7 @@ def main() -> int:
         except Exception as e:
             if _navegador_fechado(e):
                 raise
+            _salvar_diagnostico(driver, "brudam")
             _log(f"Falha no Brudam: {e}", "erro")
             erros.append(f"Brudam: {e}")
 
@@ -558,6 +653,7 @@ def main() -> int:
         except Exception as e:
             if _navegador_fechado(e):
                 raise
+            _salvar_diagnostico(driver, "tsms")
             _log(f"Falha no TSMS: {e}", "erro")
             erros.append(f"TSMS: {e}")
     except Exception as e:
