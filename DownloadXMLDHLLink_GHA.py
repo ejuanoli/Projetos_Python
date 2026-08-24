@@ -1,7 +1,7 @@
 """
 Cópia de teste do DownloadXMLDHLLink para GitHub Actions.
-Só abre https://link-cc.dhl.com e verifica se a página carrega
-(Home logada ou tela de login/SSO). Não baixa XML/PDF.
+Abre https://link-cc.dhl.com, faz login Microsoft com a conta robótica
+e verifica se chega na Home. Não baixa XML/PDF.
 
 Nomenclatura no mesmo padrão do RPA_Apple_GHA.
 """
@@ -11,8 +11,10 @@ from __future__ import annotations
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 from datetime import datetime
 from pathlib import Path
 import os
@@ -21,6 +23,7 @@ import time
 
 URL_DHL_LINK = "https://link-cc.dhl.com"
 XPATH_HOME = "//a[.//*[@data-testid='LocationOnOutlinedIcon']]"
+MS_USER_PADRAO = "PETASL.ProcessAssistant@dhl.com"
 
 LARGURA_VIEWPORT = 1980
 ALTURA_VIEWPORT = 1080
@@ -33,6 +36,16 @@ def _log(mensagem: str, nivel: str = "info") -> None:
     hora = datetime.now().strftime("%H:%M:%S")
     icones = {"etapa": "▶", "info": "●", "ok": "✓", "aviso": "!", "erro": "✗"}
     print(f"[{hora}] {icones.get(nivel, '●')} {mensagem}", flush=True)
+
+
+def _credencial(*nomes: str) -> str:
+    for nome in nomes:
+        valor = os.environ.get(nome) or ""
+        if valor.strip():
+            return valor
+    raise RuntimeError(
+        "Nenhuma das variáveis foi definida: " + ", ".join(nomes)
+    )
 
 
 def _salvar_diagnostico(driver, etapa: str) -> None:
@@ -123,9 +136,134 @@ def _pagina_carregou(driver) -> bool:
         return False
 
 
+def _clicar_primeiro(driver, wait, seletores, timeout=8) -> bool:
+    wait_local = WebDriverWait(driver, timeout)
+    for seletor in seletores:
+        try:
+            if seletor.startswith("//") or seletor.startswith("("):
+                el = wait_local.until(EC.element_to_be_clickable((By.XPATH, seletor)))
+            else:
+                el = wait_local.until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor)))
+            driver.execute_script("arguments[0].click();", el)
+            return True
+        except Exception:
+            continue
+    return False
+
+
+def _preencher_primeiro(driver, wait, seletores, valor: str, timeout=20):
+    wait_local = WebDriverWait(driver, timeout)
+    ultimo_erro = None
+    for seletor in seletores:
+        try:
+            if seletor.startswith("//"):
+                loc = (By.XPATH, seletor)
+            else:
+                loc = (By.CSS_SELECTOR, seletor)
+            el = wait_local.until(EC.presence_of_element_located(loc))
+            el.click()
+            time.sleep(0.2)
+            el.clear()
+            el.send_keys(valor)
+            return el
+        except Exception as e:
+            ultimo_erro = e
+            continue
+    raise TimeoutException(
+        f"Não achei campo de login Microsoft ({seletores}). Último erro: {ultimo_erro}"
+    )
+
+
+def _login_microsoft(driver, usuario: str, senha: str) -> None:
+    """Preenche e-mail e senha na tela login.microsoftonline.com."""
+    wait = WebDriverWait(driver, 25)
+    _log(f"Login Microsoft: preenchendo usuário {usuario}...", "etapa")
+
+    # Lista "escolher conta" / usar outra conta
+    _clicar_primeiro(
+        driver,
+        wait,
+        [
+            "#otherTile",
+            "//div[contains(@data-test-id,'otherTile')]",
+            f"//div[contains(., '{usuario}')]",
+        ],
+        timeout=5,
+    )
+    time.sleep(1)
+
+    _preencher_primeiro(
+        driver,
+        wait,
+        ["input[name='loginfmt']", "#i0116", "input[type='email']"],
+        usuario,
+    )
+    _clicar_primeiro(
+        driver,
+        wait,
+        ["#idSIButtonNext", "input[type='submit']", "input[value='Next']"],
+        timeout=8,
+    )
+    time.sleep(2)
+
+    # Tela de passkey / "usar senha"
+    _clicar_primeiro(
+        driver,
+        wait,
+        [
+            "#idA_PWD_SwitchToPassword",
+            "//a[contains(., 'password') or contains(., 'senha')]",
+            "//span[contains(., 'Use your password')]",
+            "//button[contains(., 'Use your password')]",
+        ],
+        timeout=5,
+    )
+    time.sleep(1)
+
+    _log("Login Microsoft: preenchendo senha...", "etapa")
+    campo_senha = _preencher_primeiro(
+        driver,
+        wait,
+        ["input[name='passwd']", "#i0118", "input[type='password']"],
+        senha,
+    )
+    campo_senha.send_keys(Keys.RETURN)
+    time.sleep(1)
+    _clicar_primeiro(
+        driver,
+        wait,
+        ["#idSIButtonNext", "input[type='submit']", "input[value='Sign in']"],
+        timeout=5,
+    )
+    time.sleep(3)
+
+    # Permanecer conectado? Não.
+    if _clicar_primeiro(
+        driver,
+        wait,
+        ["#idBtn_Back", "#idSIButton9"],
+        timeout=8,
+    ):
+        _log("Tela 'Stay signed in' tratada.", "info")
+        time.sleep(2)
+
+    for seletor_erro in ("#passwordError", "#usernameError", "#errorText"):
+        try:
+            el = driver.find_element(By.CSS_SELECTOR, seletor_erro)
+            if el.is_displayed() and el.text.strip():
+                raise RuntimeError(f"Microsoft recusou o login: {el.text.strip()}")
+        except RuntimeError:
+            raise
+        except Exception:
+            continue
+
+
 def testar_acesso() -> int:
     PASTA_SAIDA.mkdir(parents=True, exist_ok=True)
-    _log("Teste GitHub Actions: acesso ao DHL Link.", "etapa")
+    usuario = os.environ.get("MS_USER", MS_USER_PADRAO).strip() or MS_USER_PADRAO
+    senha = _credencial("MS_PASSWORD", "OUTLOOK_PASSWORD", "DHL_LINK_PASSWORD")
+
+    _log("Teste GitHub Actions: acesso ao DHL Link com login Microsoft.", "etapa")
     _log(f"Abrindo {URL_DHL_LINK}...", "info")
 
     driver = None
@@ -140,46 +278,19 @@ def testar_acesso() -> int:
         _salvar_diagnostico(driver, "apos_get")
 
         url = driver.current_url or ""
-        titulo = driver.title or ""
-        _log(f"Página carregou. URL={url} | título={titulo}", "ok")
+        _log(f"Página carregou. URL={url} | título={driver.title}", "ok")
 
-        try:
-            wait_home = WebDriverWait(driver, 20)
-            wait_home.until(EC.presence_of_element_located((By.XPATH, XPATH_HOME)))
-            _log("Home do DHL Link detectada (card Partner/Flow).", "ok")
-            _salvar_diagnostico(driver, "home")
-            print("RESULTADO: ACESSOU A HOME (logado).")
-            return 0
-        except Exception:
-            _log(
-                "Home logada não apareceu (esperado se o SSO/MFA pedir interação).",
-                "aviso",
-            )
+        ja_na_home = bool(driver.find_elements(By.XPATH, XPATH_HOME))
+        if not ja_na_home:
+            _login_microsoft(driver, usuario, senha)
+            _salvar_diagnostico(driver, "apos_login_ms")
 
-        url_l = url.lower()
-        tit_l = titulo.lower()
-        sinais_login = (
-            "login",
-            "signin",
-            "sign-in",
-            "sso",
-            "microsoftonline",
-            "okta",
-            "auth",
-            "sts",
-            "adfs",
-            "ping",
-            "dhl",
-            "link-cc",
-        )
-        if any(s in url_l or s in tit_l for s in sinais_login) or len(driver.page_source or "") > 500:
-            _log("O site respondeu (login/SSO ou página DHL). Rede do Actions alcança o DHL Link.", "ok")
-            print("RESULTADO: SITE ACESSÍVEL (parou no login/SSO).")
-            return 0
-
-        _log("Página vazia ou inesperada.", "erro")
-        print("RESULTADO: FALHOU — página não parece o DHL Link.")
-        return 1
+        wait_home = WebDriverWait(driver, 60)
+        wait_home.until(EC.presence_of_element_located((By.XPATH, XPATH_HOME)))
+        _log("Home do DHL Link detectada (card Partner/Flow).", "ok")
+        _salvar_diagnostico(driver, "home")
+        print("RESULTADO: ACESSOU A HOME (logado).")
+        return 0
     except Exception as e:
         _log(f"Falha ao acessar o DHL Link: {e}", "erro")
         if driver:
