@@ -1,7 +1,9 @@
-# Teste: o GitHub Actions consegue abrir o DHL Link (link-cc.dhl.com)?
-# Cópia de teste do DownloadXMLDHLLink — não baixa XML.
+# Teste: abre o DHL Link e faz login Microsoft com a conta robótica.
 #
-# Mesmo padrão do rpa-apple.yml (Chrome + xvfb + artifact).
+# Secret necessário:
+#   MS_PASSWORD  ← senha da conta PETASL.ProcessAssistant@dhl.com
+#   (se já existir OUTLOOK_PASSWORD, também serve)
+#
 # Disparo manual: Actions → Download XML DHL Link → Run workflow
 
 name: Download XML DHL Link
@@ -37,6 +39,10 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y xvfb
 
       - name: Testar acesso DHL Link
+        env:
+          MS_USER: PETASL.ProcessAssistant@dhl.com
+          MS_PASSWORD: ${{ secrets.MS_PASSWORD }}
+          OUTLOOK_PASSWORD: ${{ secrets.OUTLOOK_PASSWORD }}
         run: xvfb-run -a python DownloadXMLDHLLink_GHA.py
 
       - name: Upload diagnóstico
