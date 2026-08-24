@@ -28,7 +28,7 @@ import ssl
 import sys
 import time
 
-URL_LOGIN = "https://dhl.brudam.com.br/inicio.php"
+URL_LOGIN = "https://dhl.brudam.com.br/index.php?acao=2"
 URL_EMBARQUE = "https://dhl.brudam.com.br/gerencia/relatorio_embarque.php"
 URL_LISTA_NOTAS = "https://dhl.brudam.com.br/sac/lista_notas.php"
 URL_TSMS = "https://brasillogic.com.br/tsms/logtrack/index.php#"
@@ -281,10 +281,14 @@ def _salvar_diagnostico(driver, etapa: str) -> None:
 
 
 def _focar_login_brudam(driver, wait: WebDriverWait) -> None:
-    """Acha #user no documento ou em qualquer iframe (o Actions vê iframes extras)."""
+    """Aguarda o formulário de login (#user) no documento ou em iframe."""
     driver.switch_to.default_content()
-    time.sleep(2)
-    if driver.find_elements(By.ID, "user"):
+    try:
+        _log(f"URL de login: {driver.current_url}", "info")
+    except Exception:
+        pass
+
+    if driver.find_elements(By.CSS_SELECTOR, "#formularioAcesso #user, input#user"):
         _log("Login Brudam no documento principal.", "info")
         return
 
@@ -299,7 +303,7 @@ def _focar_login_brudam(driver, wait: WebDriverWait) -> None:
             driver.switch_to.frame(iframe)
         except Exception:
             continue
-        if driver.find_elements(By.ID, "user"):
+        if driver.find_elements(By.CSS_SELECTOR, "#formularioAcesso #user, input#user"):
             _log(f"Login Brudam encontrado no iframe {i}.", "ok")
             return
 
@@ -308,7 +312,7 @@ def _focar_login_brudam(driver, wait: WebDriverWait) -> None:
         _log(f"URL atual: {driver.current_url} | título: {driver.title}", "aviso")
     except Exception:
         pass
-    wait.until(EC.presence_of_element_located((By.ID, "user")))
+    wait.until(EC.visibility_of_element_located((By.ID, "user")))
 
 
 def _preencher_campo_data(driver, campo, valor: str) -> None:
@@ -327,11 +331,12 @@ def _exportar_brudam(driver, wait: WebDriverWait) -> list[Path]:
     senha = _credencial("BRUDAM_SENHA", "SENHA_BRUDAM")
 
     _log("Etapa 1/2: Brudam DHL", "etapa")
+    _log(f"Abrindo {URL_LOGIN}...", "info")
     driver.get(URL_LOGIN)
-    time.sleep(5)
+    wait.until(EC.presence_of_element_located((By.ID, "formularioAcesso")))
     _focar_login_brudam(driver, wait)
 
-    campo_usuario = wait.until(EC.presence_of_element_located((By.ID, "user")))
+    campo_usuario = wait.until(EC.visibility_of_element_located((By.ID, "user")))
     campo_usuario.clear()
     campo_usuario.send_keys(usuario)
     time.sleep(0.5)
