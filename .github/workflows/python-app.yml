@@ -7,13 +7,10 @@
 #   BRUDAM_SENHA
 #   TSMS_USUARIO
 #   TSMS_SENHA
-# Envio de e-mail — escolha UMA opção:
-#   A) Microsoft Graph (recomendado no DHL / MFA):
-#      GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET
-#      OUTLOOK_USER = caixa que envia (ex.: eduardojuan@dhl.com)
-#      Permissão da app: Mail.Send (application) + admin consent
-#   B) SMTP Office 365:
-#      OUTLOOK_USER, OUTLOOK_PASSWORD (senha de app se MFA estiver ativo)
+#   OUTLOOK_PASSWORD  ← senha da conta PETASL.ProcessAssistant@dhl.com
+#
+# O remetente já está no workflow (conta robótica, sem MFA).
+# Destino do e-mail: eduardojuan@dhl.com
 #
 # Se Brudam/TSMS não abrirem a partir da nuvem, troque runs-on por um
 # self-hosted runner na máquina da operação (com Chrome e rede interna).
@@ -57,9 +54,6 @@ jobs:
           TSMS_USUARIO: ${{ secrets.TSMS_USUARIO }}
           TSMS_SENHA: ${{ secrets.TSMS_SENHA }}
           EMAIL_DESTINO: eduardojuan@dhl.com
-          OUTLOOK_USER: ${{ secrets.OUTLOOK_USER }}
+          OUTLOOK_USER: PETASL.ProcessAssistant@dhl.com
           OUTLOOK_PASSWORD: ${{ secrets.OUTLOOK_PASSWORD }}
-          GRAPH_TENANT_ID: ${{ secrets.GRAPH_TENANT_ID }}
-          GRAPH_CLIENT_ID: ${{ secrets.GRAPH_CLIENT_ID }}
-          GRAPH_CLIENT_SECRET: ${{ secrets.GRAPH_CLIENT_SECRET }}
         run: python RPA_Apple_GHA.py
