@@ -1,0 +1,60 @@
+# RPA Apple — exporta Brudam + TSMS e envia os arquivos por e-mail Outlook.
+# Substitua o workflow padrão "Python application" por este arquivo em:
+#   .github/workflows/rpa-apple.yml
+#
+# Secrets necessários (Settings → Secrets and variables → Actions):
+#   BRUDAM_USUARIO
+#   BRUDAM_SENHA
+#   TSMS_USUARIO
+#   TSMS_SENHA
+#   OUTLOOK_PASSWORD  ← senha SMTP da conta PETASL.ProcessAssistant@dhl.com
+#
+# E-mail só via SMTP Office 365 (sem Microsoft Graph).
+# Remetente: PETASL.ProcessAssistant@dhl.com
+# Destino: eduardojuan@dhl.com
+#
+# Se Brudam/TSMS não abrirem a partir da nuvem, troque runs-on por um
+# self-hosted runner na máquina da operação (com Chrome e rede interna).
+
+name: RPA Apple
+
+on:
+  workflow_dispatch:
+  schedule:
+    # UTC: 13:00 e 13:30 = 10:00 e 10:30 em Brasília (UTC-3). Ajuste se quiser.
+    - cron: "0,30 13 * * 1-5"
+
+permissions:
+  contents: read
+
+jobs:
+  exportar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-gha.txt
+
+      - name: Run RPA Apple
+        env:
+          BRUDAM_USUARIO: ${{ secrets.BRUDAM_USUARIO }}
+          BRUDAM_SENHA: ${{ secrets.BRUDAM_SENHA }}
+          TSMS_USUARIO: ${{ secrets.TSMS_USUARIO }}
+          TSMS_SENHA: ${{ secrets.TSMS_SENHA }}
+          EMAIL_DESTINO: eduardojuan@dhl.com
+          OUTLOOK_USER: PETASL.ProcessAssistant@dhl.com
+          OUTLOOK_PASSWORD: ${{ secrets.OUTLOOK_PASSWORD }}
+        run: python RPA_Apple_GHA.py
