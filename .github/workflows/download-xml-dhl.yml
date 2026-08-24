@@ -1,22 +1,9 @@
-# Download XML/PDF do DHL Link, confronta com o Supabase, envia por Gmail.
-#
-# Secrets necessários (Settings → Secrets and variables → Actions):
-#   MS_PASSWORD                 ← senha da conta PETASL.ProcessAssistant@dhl.com
-#   GMAIL_APP_PASSWORD          ← senha de app do Gmail (ejuan36616@gmail.com)
-#   SUPABASE_URL                ← https://xxxx.supabase.co
-#   SUPABASE_SERVICE_ROLE_KEY   ← service_role (bypassa RLS)
-#
-# Antes da primeira execução, rode criar_tabela_xmls_dhl_link.sql no Supabase.
-#
-# Disparo: Actions → Download XML DHL Link → Run workflow
-# Agenda: a cada 2 horas (UTC). Ex.: 00:00 UTC = 21:00 de Brasília (UTC-3).
-
 name: Download XML DHL Link
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: "*/30 * * * *"
 
 permissions:
   contents: read
