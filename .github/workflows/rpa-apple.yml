@@ -48,6 +48,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-gha.txt
 
+      - name: Install xvfb
+        run: sudo apt-get update -qq && sudo apt-get install -y xvfb
+
       - name: Run RPA Apple
         env:
           BRUDAM_USUARIO: ${{ secrets.BRUDAM_USUARIO }}
@@ -57,7 +60,7 @@ jobs:
           EMAIL_DESTINO: eduardojuan@dhl.com
           GMAIL_USER: ejuan36616@gmail.com
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-        run: python RPA_Apple_GHA.py
+        run: xvfb-run -a python RPA_Apple_GHA.py
 
       - name: Upload relatórios
         if: always()
