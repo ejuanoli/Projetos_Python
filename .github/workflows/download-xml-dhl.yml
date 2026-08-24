@@ -1,10 +1,14 @@
-# Teste: abre o DHL Link e faz login Microsoft com a conta robótica.
+# Download XML/PDF do DHL Link, confronta com o Supabase, envia por Gmail.
 #
-# Secret necessário:
-#   MS_PASSWORD  ← senha da conta PETASL.ProcessAssistant@dhl.com
-#   (se já existir OUTLOOK_PASSWORD, também serve)
+# Secrets necessários (Settings → Secrets and variables → Actions):
+#   MS_PASSWORD                 ← senha da conta PETASL.ProcessAssistant@dhl.com
+#   GMAIL_APP_PASSWORD          ← senha de app do Gmail (ejuan36616@gmail.com)
+#   SUPABASE_URL                ← https://xxxx.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY   ← service_role (bypassa RLS)
 #
-# Disparo manual: Actions → Download XML DHL Link → Run workflow
+# Antes da primeira execução, rode criar_tabela_xmls_dhl_link.sql no Supabase.
+#
+# Disparo: Actions → Download XML DHL Link → Run workflow
 
 name: Download XML DHL Link
 
@@ -15,9 +19,9 @@ permissions:
   contents: read
 
 jobs:
-  testar-acesso:
+  baixar-xml:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -38,14 +42,20 @@ jobs:
       - name: Install xvfb
         run: sudo apt-get update -qq && sudo apt-get install -y xvfb
 
-      - name: Testar acesso DHL Link
+      - name: Download XML DHL Link
         env:
           MS_USER: PETASL.ProcessAssistant@dhl.com
           MS_PASSWORD: ${{ secrets.MS_PASSWORD }}
           OUTLOOK_PASSWORD: ${{ secrets.OUTLOOK_PASSWORD }}
+          EMAIL_DESTINO: eduardojuan@dhl.com
+          GMAIL_USER: ejuan36616@gmail.com
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: xvfb-run -a python DownloadXMLDHLLink_GHA.py
 
-      - name: Upload diagnóstico
+      - name: Upload arquivos baixados
         if: always()
         uses: actions/upload-artifact@v4
         with:
