@@ -16,7 +16,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from datetime import date, timedelta, datetime
 from email.message import EmailMessage
 from pathlib import Path
@@ -91,7 +91,10 @@ def _criar_opcoes_chrome() -> Options:
     PASTA_DOWNLOADS.mkdir(parents=True, exist_ok=True)
     destino = str(PASTA_DOWNLOADS)
     opcoes = Options()
-    opcoes.add_argument("--headless=new")
+    # Headless costuma cair na tela "navegador não suportado" do Brudam,
+    # sem o #user. No Actions usamos xvfb (tela virtual) com Chrome normal.
+    if os.environ.get("RPA_HEADLESS", "").strip() == "1":
+        opcoes.add_argument("--headless=new")
     opcoes.add_argument("--window-size=1920,1080")
     opcoes.add_argument("--disable-gpu")
     opcoes.add_argument("--no-sandbox")
@@ -102,6 +105,8 @@ def _criar_opcoes_chrome() -> Options:
         "--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
     )
+    opcoes.add_experimental_option("excludeSwitches", ["enable-automation"])
+    opcoes.add_experimental_option("useAutomationExtension", False)
     opcoes.add_experimental_option("prefs", {
         "download.default_directory": destino,
         "download.prompt_for_download": False,
@@ -118,6 +123,15 @@ def _aplicar_pasta_download_chrome(driver) -> None:
         driver.execute_cdp_cmd(
             "Page.setDownloadBehavior",
             {"behavior": "allow", "downloadPath": str(PASTA_DOWNLOADS)},
+        )
+        driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {
+                "source": (
+                    "Object.defineProperty(navigator, 'webdriver', "
+                    "{get: () => undefined});"
+                )
+            },
         )
         _log(f"Pasta de download do Chrome: {PASTA_DOWNLOADS}", "info")
     except Exception as exc:
@@ -280,39 +294,67 @@ def _salvar_diagnostico(driver, etapa: str) -> None:
         _log(f"Não foi possível salvar HTML: {e}", "aviso")
 
 
-def _focar_login_brudam(driver, wait: WebDriverWait) -> None:
-    """Aguarda o formulário de login (#user) no documento ou em iframe."""
-    driver.switch_to.default_content()
-    try:
-        _log(f"URL de login: {driver.current_url}", "info")
-    except Exception:
-        pass
+def _login_brudam_js(driver, usuario: str, senha: str) -> dict:
+    """Preenche #user/#password e clica #acessar via jQuery (como o site espera).
 
-    if driver.find_elements(By.CSS_SELECTOR, "#formularioAcesso #user, input#user"):
-        _log("Login Brudam no documento principal.", "info")
-        return
+    Não usa visibilidade do Selenium: o CSS do #logim (overflow:hidden) faz o
+    wait de visibility falhar mesmo com o input no HTML.
+    """
+    return driver.execute_script(
+        """
+        const usuario = arguments[0];
+        const senha = arguments[1];
+        const user = document.getElementById('user')
+            || document.querySelector('input[name="user"]');
+        const pass = document.getElementById('password')
+            || document.querySelector('input[name="password"]');
+        const btn = document.getElementById('acessar')
+            || document.querySelector('a.btn-loginsistema, a.btn-acessar');
+        if (!user || !pass || !btn) {
+            return {
+                ok: false,
+                temUser: !!user,
+                temPass: !!pass,
+                temBtn: !!btn,
+                ids: Array.from(document.querySelectorAll('[id]'))
+                    .map(e => e.id).filter(Boolean).slice(0, 50),
+            };
+        }
+        if (window.jQuery) {
+            jQuery('#user').val(usuario).trigger('input').trigger('change');
+            jQuery('#password').val(senha).trigger('input').trigger('change');
+            jQuery('#acessar').trigger('click');
+        } else {
+            user.value = usuario;
+            pass.value = senha;
+            btn.click();
+        }
+        return {ok: true, url: location.href};
+        """,
+        usuario,
+        senha,
+    ) or {}
 
-    iframes = driver.find_elements(By.TAG_NAME, "iframe")
-    _log(
-        f"Campo #user não está no documento principal. {len(iframes)} iframe(s).",
-        "info",
-    )
-    for i, iframe in enumerate(iframes):
-        driver.switch_to.default_content()
+
+def _esperar_campo_user_js(driver, timeout: int = 45) -> None:
+    fim = time.time() + timeout
+    ultimo = ""
+    while time.time() < fim:
         try:
-            driver.switch_to.frame(iframe)
+            ultimo = driver.current_url
+            achou = driver.execute_script(
+                "return !!(document.getElementById('user') "
+                "|| document.querySelector('input[name=\"user\"]'));"
+            )
+            if achou:
+                _log(f"Campo user encontrado via JS. URL: {ultimo}", "ok")
+                return
         except Exception:
-            continue
-        if driver.find_elements(By.CSS_SELECTOR, "#formularioAcesso #user, input#user"):
-            _log(f"Login Brudam encontrado no iframe {i}.", "ok")
-            return
-
-    driver.switch_to.default_content()
-    try:
-        _log(f"URL atual: {driver.current_url} | título: {driver.title}", "aviso")
-    except Exception:
-        pass
-    wait.until(EC.visibility_of_element_located((By.ID, "user")))
+            pass
+        time.sleep(0.4)
+    raise TimeoutException(
+        f"Campo user não apareceu em {timeout}s. URL: {ultimo or '?'}"
+    )
 
 
 def _preencher_campo_data(driver, campo, valor: str) -> None:
@@ -333,22 +375,18 @@ def _exportar_brudam(driver, wait: WebDriverWait) -> list[Path]:
     _log("Etapa 1/2: Brudam DHL", "etapa")
     _log(f"Abrindo {URL_LOGIN}...", "info")
     driver.get(URL_LOGIN)
-    wait.until(EC.presence_of_element_located((By.ID, "formularioAcesso")))
-    _focar_login_brudam(driver, wait)
-
-    campo_usuario = wait.until(EC.visibility_of_element_located((By.ID, "user")))
-    campo_usuario.clear()
-    campo_usuario.send_keys(usuario)
-    time.sleep(0.5)
-
-    campo_senha = wait.until(EC.presence_of_element_located((By.ID, "password")))
-    campo_senha.clear()
-    campo_senha.send_keys(senha)
-    time.sleep(0.5)
-
-    botao_login = wait.until(EC.element_to_be_clickable((By.ID, "acessar")))
-    driver.execute_script("arguments[0].click();", botao_login)
+    _esperar_campo_user_js(driver, timeout=45)
+    time.sleep(1)
+    resultado = _login_brudam_js(driver, usuario, senha)
+    if not resultado.get("ok"):
+        _log(f"Login JS não achou os campos: {resultado}", "erro")
+        raise TimeoutException(
+            "HTML de login sem #user/#password/#acessar. "
+            f"ids na página: {resultado.get('ids')}"
+        )
+    _log("Usuário/senha preenchidos e Acessar clicado via jQuery.", "ok")
     driver.switch_to.default_content()
+    time.sleep(3)
 
     try:
         botao_fechar_modal = wait.until(EC.element_to_be_clickable((
