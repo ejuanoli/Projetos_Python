@@ -1,17 +1,17 @@
-# RPA Apple — exporta Brudam + TSMS e envia os arquivos por e-mail Outlook.
-# Substitua o workflow padrão "Python application" por este arquivo em:
-#   .github/workflows/rpa-apple.yml
+# RPA Apple — exporta Brudam + TSMS e envia os arquivos por e-mail Gmail.
 #
 # Secrets necessários (Settings → Secrets and variables → Actions):
 #   BRUDAM_USUARIO
 #   BRUDAM_SENHA
 #   TSMS_USUARIO
 #   TSMS_SENHA
-#   OUTLOOK_PASSWORD  ← senha SMTP da conta PETASL.ProcessAssistant@dhl.com
+#   GMAIL_APP_PASSWORD  ← senha de app do Google da conta ejuan36616@gmail.com
 #
-# E-mail só via SMTP Office 365 (sem Microsoft Graph).
-# Remetente: PETASL.ProcessAssistant@dhl.com
-# Destino: eduardojuan@dhl.com
+# Como gerar a senha de app:
+#   https://myaccount.google.com/apppasswords
+#   (precisa ter verificação em duas etapas ligada)
+#
+# Remetente: Gmail | Destino: eduardojuan@dhl.com
 #
 # Se Brudam/TSMS não abrirem a partir da nuvem, troque runs-on por um
 # self-hosted runner na máquina da operação (com Chrome e rede interna).
@@ -55,6 +55,15 @@ jobs:
           TSMS_USUARIO: ${{ secrets.TSMS_USUARIO }}
           TSMS_SENHA: ${{ secrets.TSMS_SENHA }}
           EMAIL_DESTINO: eduardojuan@dhl.com
-          OUTLOOK_USER: PETASL.ProcessAssistant@dhl.com
-          OUTLOOK_PASSWORD: ${{ secrets.OUTLOOK_PASSWORD }}
+          GMAIL_USER: ejuan36616@gmail.com
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python RPA_Apple_GHA.py
+
+      - name: Upload relatórios
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-rpa-apple
+          path: saida_rpa_apple/**
+          if-no-files-found: warn
+          retention-days: 14
