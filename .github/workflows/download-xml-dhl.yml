@@ -9,11 +9,14 @@
 # Antes da primeira execução, rode criar_tabela_xmls_dhl_link.sql no Supabase.
 #
 # Disparo: Actions → Download XML DHL Link → Run workflow
+# Agenda: a cada 2 horas (UTC). Ex.: 00:00 UTC = 21:00 de Brasília (UTC-3).
 
 name: Download XML DHL Link
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 */2 * * *"
 
 permissions:
   contents: read
