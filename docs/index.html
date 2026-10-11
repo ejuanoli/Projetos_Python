@@ -109,8 +109,11 @@ body {
 .hd-logo img { display: block; }
 .hd-logo .hd-vb { filter: var(--logo-filter); }
 .hd-logo span { color: var(--gold); }
-.hd .btn { flex-shrink: 0; }
-.btn-user { padding: 0 !important; min-width: 40px; width: 40px; overflow: hidden; border-radius: 50%; }
+.hd { gap: 6px; }
+.hd-logo { font-size: clamp(15px, 4.8vw, 19px); gap: 5px; }
+.hd-logo img { width: 1.1em; height: 1.1em; }
+.hd .btn { flex-shrink: 0; min-width: 36px !important; width: 36px; min-height: 36px; padding: 0 !important; }
+.btn-user { overflow: hidden; border-radius: 50%; }
 .btn-user img, .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .avatar {
   width: 88px; height: 88px; border-radius: 50%; overflow: hidden;
@@ -123,7 +126,46 @@ body {
   background: var(--ok-dim); color: var(--ok);
   display: flex; align-items: center; justify-content: center;
 }
-#profileSheet .mbox { position: relative; }
+.pf { position: relative; padding-top: 0; }
+.pf-cover {
+  height: 92px; margin: 0 -20px;
+  background: linear-gradient(135deg, var(--ac) 0%, var(--ok) 130%);
+  opacity: .55;
+}
+.pf-x {
+  position: absolute; top: 10px; right: 12px; width: 32px; height: 32px;
+  border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(0,0,0,.35); color: #fff; font-size: 20px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.pf-head { display: flex; flex-direction: column; align-items: center; margin-top: -48px; margin-bottom: 18px; text-align: center; }
+.pf-av { position: relative; background: none; border: none; padding: 0; cursor: pointer; margin-bottom: 10px; }
+.pf-av .avatar { width: 96px; height: 96px; margin: 0; border: 4px solid var(--surf); box-shadow: 0 2px 10px rgba(0,0,0,.25); }
+.pf-cam {
+  position: absolute; right: 0; bottom: 2px; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--ac); color: #fff; border: 2px solid var(--surf);
+  display: flex; align-items: center; justify-content: center;
+}
+.pf-name { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: .03em; line-height: 1.1; max-width: 100%; overflow-wrap: anywhere; }
+.pf-handle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.pf-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+.pf-chip { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--surf2); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+.pf-chip.ok { background: var(--ok-dim); color: var(--ok); border-color: transparent; }
+.pf-chip.ac { background: var(--ac-dim); color: var(--ac); border-color: transparent; }
+.pf-since { font-size: 11px; color: var(--muted); margin-top: 8px; }
+.pf-card { background: var(--surf2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.pf-card .field input, .pf-card .field textarea { background: var(--surf); }
+.pf-list { display: flex; flex-direction: column; gap: 8px; }
+.pf-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 13px 14px; border-radius: 12px; cursor: pointer;
+  background: var(--surf2); border: 1px solid var(--border); color: var(--fg);
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; text-align: left;
+}
+.pf-row span { flex: 1; }
+.pf-row .pf-chev { color: var(--muted); }
+.pf-row:active { opacity: .7; }
+.pf-danger { color: var(--no); border-color: var(--no); background: transparent; }
 .field textarea {
   width: 100%; padding: 11px 13px; resize: none;
   background: var(--surf2); border: 1px solid var(--border);
@@ -459,6 +501,33 @@ body {
 }
 .login-tab.active { background: var(--surf); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 
+/* ── login hero ───────────────────── */
+#loginScreen { background: radial-gradient(120% 80% at 50% 0%, rgba(61,160,255,.22), transparent 60%), var(--bg); backdrop-filter: none; }
+#loginScreen .mbox { max-width: 420px; margin: 0 auto; box-shadow: 0 20px 60px rgba(0,0,0,.35); padding: 28px 22px 26px; }
+.ls-hero { text-align: center; margin-bottom: 22px; }
+.ls-badge {
+  width: 72px; height: 72px; margin: 0 auto 12px; border-radius: 20px;
+  background: linear-gradient(145deg, var(--ac-dim), var(--ok-dim));
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+.ls-title {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; line-height: 1; white-space: nowrap;
+}
+.ls-title span { color: var(--gold); }
+.ls-sub { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+#loginScreen .field input { min-height: 48px; }
+#loginScreen .field input:focus { box-shadow: 0 0 0 3px var(--ac-dim); }
+.shake { animation: shake .35s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+.pw-bar { height: 4px; border-radius: 4px; background: var(--surf2); margin-top: 10px; overflow: hidden; }
+.pw-bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--no); transition: width .2s, background .2s; }
+.pw-rules { list-style: none; margin: 8px 0 0; padding: 0; font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+.pw-rules li::before { content: '○'; display: inline-block; width: 16px; }
+.pw-rules li.ok { color: var(--ok); }
+.pw-rules li.ok::before { content: '✓'; }
+
 /* ── WhatsApp setup steps ────────── */
 .wz-toggle {
   display: flex; align-items: center; justify-content: space-between;
@@ -512,12 +581,10 @@ body {
 <!-- Tela de login/cadastro -->
 <div class="mbg" id="loginScreen" style="align-items:center">
   <div class="mbox" style="border-radius:16px">
-    <div style="text-align:center;margin-bottom:18px">
-      <div class="hd-logo" style="font-size:22px;display:inline-flex;align-items:center;gap:8px;justify-content:center;margin-bottom:4px">
-        <img id="ls-vb-icon" alt="V-Bucks" width="26" height="26" style="object-fit:contain">
-        V-Bucks <span>Monitor</span>
-      </div>
-      <div style="font-size:12px;color:var(--muted)">Entre para continuar</div>
+    <div class="ls-hero">
+      <div class="ls-badge"><img id="ls-vb-icon" alt="V-Bucks" width="40" height="40" style="object-fit:contain"></div>
+      <div class="ls-title">V-Bucks <span>Monitor</span></div>
+      <div class="ls-sub" id="lsSub">Alertas diários de V-Bucks do Salve o Mundo</div>
     </div>
 
     <!-- Tabs entrar/criar -->
@@ -549,16 +616,27 @@ body {
     <div id="formCadastro" hidden>
       <div class="field">
         <label for="regUser">Usuário</label>
-        <input type="text" id="regUser" placeholder="seu_usuario" autocomplete="username" autocapitalize="none">
+        <input type="text" id="regUser" placeholder="seu_usuario" autocomplete="username" autocapitalize="none" maxlength="20">
+        <div class="fhint">3 a 20 caracteres: letras, números, _ ou .</div>
       </div>
       <div class="field">
         <label for="regPass">Senha</label>
         <div class="pass-wrap">
-          <input type="password" id="regPass" placeholder="••••••••" autocomplete="new-password">
+          <input type="password" id="regPass" placeholder="Crie uma senha" autocomplete="new-password">
           <button type="button" class="btn-eye" id="btnShowRegPass" title="Mostrar senha">
             <svg id="eyeIconReg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
+        <div class="pw-bar"><i id="pwBar"></i></div>
+        <ul class="pw-rules" id="pwRules">
+          <li data-r="len">Mínimo de 8 caracteres</li>
+          <li data-r="let">Pelo menos uma letra</li>
+          <li data-r="num">Pelo menos um número</li>
+        </ul>
+      </div>
+      <div class="field">
+        <label for="regPass2">Confirmar senha</label>
+        <input type="password" id="regPass2" placeholder="Repita a senha" autocomplete="new-password">
       </div>
 
       <!-- WhatsApp opcional -->
@@ -646,35 +724,51 @@ body {
 
 <!-- Modal de perfil -->
 <div class="mbg" id="profileSheet" hidden>
-  <div class="mbox">
-    <button type="button" id="btnProfClose" aria-label="Fechar" style="position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:26px;line-height:1;cursor:pointer;padding:6px 10px">&times;</button>
-    <div class="avatar" id="profAvatar"></div>
-    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px">
-      <button type="button" class="btn btn-ghost" id="btnAvatarPick" style="min-height:34px;font-size:12px">Alterar foto</button>
-      <button type="button" class="btn btn-ghost" id="btnAvatarRemove" style="min-height:34px;font-size:12px;display:none">Remover</button>
+  <div class="mbox pf">
+    <div class="pf-cover"></div>
+    <button type="button" id="btnProfClose" aria-label="Fechar" class="pf-x">&times;</button>
+    <div class="pf-head">
+      <button type="button" class="pf-av" id="btnAvatarPick" aria-label="Alterar foto">
+        <span class="avatar" id="profAvatar"></span>
+        <span class="pf-cam"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+      </button>
+      <div class="pf-name" id="profName"></div>
+      <div class="pf-handle" id="profSub"></div>
+      <div class="pf-chips" id="profChips"></div>
+      <div class="pf-since" id="profSince"></div>
     </div>
     <input type="file" id="avatarFile" accept="image/*" hidden>
-    <div class="m-title" id="profName" style="text-align:center"></div>
-    <div class="m-sub" id="profSub" style="text-align:center;margin-bottom:4px"></div>
-    <div class="m-sub" id="profSince" style="text-align:center;font-size:11px;margin-bottom:18px"></div>
 
-    <div class="field">
-      <label for="profDisplay">Nome de exibição</label>
-      <input type="text" id="profDisplay" maxlength="40" placeholder="Como quer ser chamado">
+    <div class="pf-card">
+      <div class="field">
+        <label for="profDisplay">Nome de exibição</label>
+        <input type="text" id="profDisplay" maxlength="40" placeholder="Como quer ser chamado">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="profBio">Sobre mim <span id="bioCount" style="float:right;font-weight:400">0/160</span></label>
+        <textarea id="profBio" maxlength="160" rows="3" placeholder="Uma frase sobre você"></textarea>
+      </div>
     </div>
-    <div class="field">
-      <label for="profBio">Sobre mim <span id="bioCount" style="float:right;font-weight:400">0/160</span></label>
-      <textarea id="profBio" maxlength="160" rows="3" placeholder="Uma frase sobre você"></textarea>
-    </div>
-    <div id="profMsg" style="font-size:12px;margin-bottom:10px;display:none"></div>
-    <button type="button" class="btn btn-primary" id="btnProfSave" style="width:100%;min-height:44px;margin-bottom:14px">Salvar perfil</button>
+    <div id="profMsg" style="font-size:12px;margin:10px 0 0;display:none"></div>
+    <button type="button" class="btn btn-primary" id="btnProfSave" style="width:100%;min-height:46px;margin:14px 0 18px">Salvar perfil</button>
 
-    <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:14px">
-      <button type="button" class="btn btn-ghost" id="btnIcons" style="min-height:44px">Ícones das missões</button>
-      <button type="button" class="btn btn-ghost" id="btnWa" style="min-height:44px;gap:8px">
-        <img id="hd-wa-icon" alt="" width="20" height="20" style="object-fit:contain">WhatsApp
+    <div class="pf-list">
+      <button type="button" class="pf-row" id="btnIcons">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg>
+        <span>Ícones das missões</span><svg class="pf-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
-      <button type="button" class="btn btn-ghost" id="btnCfg" style="min-height:44px;color:var(--no);border-color:var(--no)">Sair da conta</button>
+      <button type="button" class="pf-row" id="btnWa">
+        <img id="hd-wa-icon" alt="" width="20" height="20" style="object-fit:contain">
+        <span>WhatsApp</span><svg class="pf-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button type="button" class="pf-row" id="btnAvatarRemove" style="display:none">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        <span>Remover foto</span><svg class="pf-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button type="button" class="pf-row pf-danger" id="btnCfg">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Sair da conta</span>
+      </button>
     </div>
   </div>
 </div>
@@ -715,6 +809,9 @@ body {
   </button>
   <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar" style="min-width:44px;padding:0 12px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+  </button>
+  <button type="button" class="btn btn-ghost" id="btnWaTop" title="WhatsApp">
+    <img id="hd-wa-icon-top" alt="WhatsApp" width="20" height="20" style="object-fit:contain">
   </button>
   <button type="button" class="btn btn-ghost btn-user" id="btnUser" title="Perfil"></button>
 </div>
@@ -772,7 +869,7 @@ const WA_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/
 // Set icon srcs from embedded data
 (function() {
   const vbIds = ['ls-vb-icon','legend-vb-icon'];
-  const waIds = ['hd-wa-icon','wa-modal-icon','wz-toggle-wa-icon'];
+  const waIds = ['hd-wa-icon','hd-wa-icon-top','wa-modal-icon','wz-toggle-wa-icon'];
   document.getElementById('hd-vb-icon').src = VB_ICON;
   vbIds.forEach(id => { const el = document.getElementById(id); if (el) el.src = VB_IMG; });
   waIds.forEach(id => { const el = document.getElementById(id); if (el) el.src = WA_ICON; });
@@ -865,7 +962,10 @@ async function tryLogin() {
       document.getElementById('btnTrigger').hidden = !data.pat;
       loadData();
     } else {
+      err.textContent = 'Usuário ou senha incorretos.';
       err.style.display = 'block';
+      const box = loginScreen.querySelector('.mbox');
+      box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
       document.getElementById('loginPass').value = '';
       document.getElementById('loginPass').focus();
     }
@@ -877,12 +977,41 @@ async function tryLogin() {
   }
 }
 
+function pwChecks(s) {
+  return { len: s.length >= 8, let: /[A-Za-z]/.test(s), num: /[0-9]/.test(s) };
+}
+function updatePwUI() {
+  const s = document.getElementById('regPass').value;
+  const c = pwChecks(s);
+  document.querySelectorAll('#pwRules li').forEach(li => li.classList.toggle('ok', c[li.dataset.r]));
+  let score = Object.values(c).filter(Boolean).length;
+  if (s.length >= 12 && /[^A-Za-z0-9]/.test(s) && score === 3) score = 4;
+  const bar = document.getElementById('pwBar');
+  bar.style.width = (s ? score * 25 : 0) + '%';
+  bar.style.background = score >= 4 ? 'var(--ok)' : score === 3 ? 'var(--wait)' : 'var(--no)';
+}
+document.getElementById('regPass').addEventListener('input', updatePwUI);
+document.getElementById('btnShowRegPass').addEventListener('click', () => {
+  document.getElementById('regPass2').type = document.getElementById('regPass').type;
+});
+document.getElementById('tabEntrar').addEventListener('click', () => {
+  document.getElementById('lsSub').textContent = 'Alertas diários de V-Bucks do Salve o Mundo';
+});
+document.getElementById('tabCriar').addEventListener('click', () => {
+  document.getElementById('lsSub').textContent = 'Crie sua conta para acompanhar as missões';
+});
+
 async function tryRegister() {
   const username = document.getElementById('regUser').value.trim();
   const senha    = document.getElementById('regPass').value;
   const btn      = document.getElementById('btnRegister');
   const err      = document.getElementById('regErr');
-  if (!username || !senha) { err.textContent = 'Preencha usuário e senha.'; err.style.display = 'block'; return; }
+  const fail = m => { err.textContent = m; err.style.display = 'block'; };
+  if (!username || !senha) return fail('Preencha usuário e senha.');
+  if (!/^[A-Za-z0-9_.]{3,20}$/.test(username)) return fail('Usuário deve ter 3 a 20 caracteres (letras, números, _ ou .).');
+  const pc = pwChecks(senha);
+  if (!pc.len || !pc.let || !pc.num) return fail('A senha deve ter ao menos 8 caracteres, com letras e números.');
+  if (senha !== document.getElementById('regPass2').value) return fail('As senhas não coincidem.');
   let telefone = null, apikey = null;
   if (wzEnabled) {
     telefone = document.getElementById('regPhone').value.replace(/\D/g, '');
@@ -919,7 +1048,8 @@ document.getElementById('btnLogin').addEventListener('click', tryLogin);
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
 document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
 document.getElementById('btnRegister').addEventListener('click', tryRegister);
-document.getElementById('regPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryRegister(); });
+document.getElementById('regPass').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('regPass2').focus(); });
+document.getElementById('regPass2').addEventListener('keydown', e => { if (e.key === 'Enter') tryRegister(); });
 
 // ── Refresh manual ───────────────────────────────
 document.getElementById('btnRefresh').addEventListener('click', async () => {
@@ -943,7 +1073,10 @@ function refreshUserUI() {
   const s = getSession();
   const p = getProfile();
   document.getElementById('profName').textContent = s ? (p.nome || s.username) : '';
-  document.getElementById('profSub').textContent = s ? '@' + s.username + ' · ' + (s.pat ? 'Administrador' : 'Usuário') + (s.tem_whatsapp ? ' · WhatsApp ativo' : ' · Sem WhatsApp') : '';
+  document.getElementById('profSub').textContent = s ? '@' + s.username : '';
+  document.getElementById('profChips').innerHTML = s
+    ? `<span class="pf-chip ac">${s.pat ? 'Administrador' : 'Usuário'}</span><span class="pf-chip ${s.tem_whatsapp ? 'ok' : ''}">${s.tem_whatsapp ? 'WhatsApp ativo' : 'Sem WhatsApp'}</span>`
+    : '';
   document.getElementById('profSince').textContent = p.criado_em
     ? 'Membro desde ' + new Date(p.criado_em).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
     : '';
@@ -1153,6 +1286,7 @@ function openWaSheet() {
   waSheet.hidden = false;
 }
 document.getElementById('btnWa').addEventListener('click', openWaSheet);
+document.getElementById('btnWaTop').addEventListener('click', openWaSheet);
 document.getElementById('btnWaCancel').addEventListener('click', () => { waSheet.hidden = true; });
 
 document.getElementById('btnWaSave').addEventListener('click', async () => {
