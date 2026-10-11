@@ -27,4 +27,6 @@ jobs:
         env:
           WHATSAPP_TELEFONE: ${{ secrets.WHATSAPP_TELEFONE }}
           WHATSAPP_APIKEY: ${{ secrets.WHATSAPP_APIKEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: python check_vbucks.py
