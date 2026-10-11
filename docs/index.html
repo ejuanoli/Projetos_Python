@@ -675,9 +675,9 @@ body {
           <p>Você receberá sua API key. Exemplo: <code>1234567</code></p>
         </div>
         <div class="field" style="margin-top:12px;margin-bottom:12px">
-          <label for="regPhone">Seu número (com DDD e código do país)</label>
-          <input type="tel" id="regPhone" placeholder="5511999999999">
-          <div class="fhint">Apenas números, ex: 5511997590616</div>
+          <label for="regPhone">Seu número de WhatsApp</label>
+          <input type="tel" id="regPhone" placeholder="(11) 99999-9999" autocomplete="tel">
+          <div class="fhint" id="regPhoneHint">Pode digitar com DDD, +, espaços ou traços. Ajustamos para você.</div>
         </div>
         <div class="field" style="margin-bottom:0">
           <label for="regApiKey">API key recebida</label>
@@ -718,9 +718,9 @@ body {
     </div>
 
     <div class="field">
-      <label for="waPhone">Seu número (com DDD e código do país)</label>
-      <input type="tel" id="waPhone" placeholder="5511999999999" inputmode="numeric">
-      <div class="fhint">Apenas números, ex: 5511997590616</div>
+      <label for="waPhone">Seu número de WhatsApp</label>
+      <input type="tel" id="waPhone" placeholder="(11) 99999-9999" autocomplete="tel">
+      <div class="fhint" id="waPhoneHint">Pode digitar com DDD, +, espaços ou traços. Ajustamos para você.</div>
     </div>
     <div class="field">
       <label for="waApiKey">API key do CallMeBot</label>
@@ -1023,9 +1023,10 @@ async function tryRegister() {
   if (senha !== document.getElementById('regPass2').value) return fail('As senhas não coincidem.');
   let telefone = null, apikey = null;
   if (wzEnabled) {
-    telefone = document.getElementById('regPhone').value.replace(/\D/g, '');
+    telefone = normalizePhone(document.getElementById('regPhone').value);
     apikey   = document.getElementById('regApiKey').value.trim();
     if (!telefone || !apikey) { err.textContent = 'Preencha telefone e API key para WhatsApp.'; err.style.display = 'block'; return; }
+    if (!phoneValid(telefone)) { err.textContent = 'Número inválido. Use DDD + número, ex: (11) 99999-9999.'; err.style.display = 'block'; return; }
   }
   btn.disabled = true; btn.textContent = '⟳';
   err.style.display = 'none';
@@ -1269,6 +1270,7 @@ document.getElementById('iconFile').addEventListener('change', e => {
 const logoutSheet = document.getElementById('logoutSheet');
 document.getElementById('btnCfg').addEventListener('click', () => { profileSheet.hidden = true; logoutSheet.hidden = false; });
 document.getElementById('btnLogoutCancel').addEventListener('click', () => { logoutSheet.hidden = true; });
+logoutSheet.addEventListener('click', e => { if (e.target === logoutSheet) logoutSheet.hidden = true; });
 document.getElementById('btnLogoutConfirm').addEventListener('click', () => {
   logoutSheet.hidden = true;
   clearSession();
@@ -1283,6 +1285,40 @@ document.getElementById('btnLogoutConfirm').addEventListener('click', () => {
   document.getElementById('formLogin').hidden = false;
   document.getElementById('formCadastro').hidden = true;
 });
+
+// ── Telefone ──────────────────────────────────────
+function normalizePhone(raw) {
+  raw = String(raw || '').trim();
+  const intl = raw.startsWith('+');
+  let d = raw.replace(/\D/g, '');
+  if (d.startsWith('00')) d = d.replace(/^0+/, '');
+  if (!d) return '';
+  if (intl && !d.startsWith('55')) return d.replace(/^0+/, '');
+  if (d.startsWith('55') && d.length >= 12) return '55' + d.slice(2).replace(/^0+/, '');
+  return '55' + d.replace(/^0+/, '');
+}
+function phoneValid(p) {
+  if (p.startsWith('55')) return /^55[1-9][0-9][2-9][0-9]{7,8}$/.test(p);
+  return /^[0-9]{8,15}$/.test(p);
+}
+function formatPhone(p) {
+  const m = p.match(/^55(\d{2})(\d{4,5})(\d{4})$/);
+  return m ? '+55 (' + m[1] + ') ' + m[2] + '-' + m[3] : '+' + p;
+}
+function bindPhoneField(inputId, hintId) {
+  const inp = document.getElementById(inputId), hint = document.getElementById(hintId);
+  const base = hint.textContent;
+  const update = () => {
+    const p = normalizePhone(inp.value);
+    hint.style.color = '';
+    hint.textContent = !p ? base : phoneValid(p) ? 'Será salvo como ' + formatPhone(p) : 'Número incompleto ou inválido.';
+    if (p && !phoneValid(p)) hint.style.color = 'var(--no)';
+  };
+  inp.addEventListener('input', update);
+  inp.addEventListener('blur', () => { const p = normalizePhone(inp.value); if (p && phoneValid(p)) inp.value = formatPhone(p); update(); });
+}
+bindPhoneField('regPhone', 'regPhoneHint');
+bindPhoneField('waPhone', 'waPhoneHint');
 
 // ── WhatsApp modal ────────────────────────────────
 const waSheet = document.getElementById('waSheet');
@@ -1304,14 +1340,16 @@ function openWaSheet() {
 document.getElementById('btnWa').addEventListener('click', openWaSheet);
 document.getElementById('btnWaTop').addEventListener('click', openWaSheet);
 document.getElementById('btnWaCancel').addEventListener('click', () => { waSheet.hidden = true; });
+waSheet.addEventListener('click', e => { if (e.target === waSheet) waSheet.hidden = true; });
 
 document.getElementById('btnWaSave').addEventListener('click', async () => {
   const s = getSession();
   if (!s) return;
-  const telefone = document.getElementById('waPhone').value.replace(/\D/g, '');
+  const telefone = normalizePhone(document.getElementById('waPhone').value);
   const apikey   = document.getElementById('waApiKey').value.trim();
   const err      = document.getElementById('waErr');
   if (!telefone || !apikey) { err.textContent = 'Preencha telefone e API key.'; err.style.display = 'block'; return; }
+  if (!phoneValid(telefone)) { err.textContent = 'Número inválido. Use DDD + número, ex: (11) 99999-9999.'; err.style.display = 'block'; return; }
   const btn = document.getElementById('btnWaSave');
   btn.disabled = true; btn.textContent = '⟳';
   err.style.display = 'none';
