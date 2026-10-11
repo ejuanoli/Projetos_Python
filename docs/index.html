@@ -1,0 +1,557 @@
+<title>V-Bucks Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap">
+
+<style>
+/* Layout: coluna única, max 660px, centralizada */
+:root {
+  --bg:        #f0f5fc;
+  --surface:   #ffffff;
+  --surface2:  #e4ecf8;
+  --border:    #c9d8ee;
+  --fg:        #0c1524;
+  --muted:     #55698f;
+  --accent:    #1878e8;
+  --ac-dim:    rgba(24,120,232,.10);
+  --gold:      #c08a0f;
+  --gold-dim:  rgba(192,138,15,.12);
+  --ok:        #15803d;
+  --ok-dim:    rgba(21,128,61,.12);
+  --no:        #b91c1c;
+  --no-dim:    rgba(185,28,28,.12);
+  --wait:      #5b21b6;
+  --wait-dim:  rgba(91,33,182,.10);
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:       #07101e;
+    --surface:  #0e1929;
+    --surface2: #152236;
+    --border:   #1b2d46;
+    --fg:       #d8e6f8;
+    --muted:    #5e7aa4;
+    --accent:   #3ba2ff;
+    --ac-dim:   rgba(59,162,255,.13);
+    --gold:     #edb810;
+    --gold-dim: rgba(237,184,16,.13);
+    --ok:       #22c55e;
+    --ok-dim:   rgba(34,197,94,.13);
+    --no:       #f87171;
+    --no-dim:   rgba(248,113,113,.13);
+    --wait:     #a78bfa;
+    --wait-dim: rgba(167,139,250,.13);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:       #07101e;
+  --surface:  #0e1929;
+  --surface2: #152236;
+  --border:   #1b2d46;
+  --fg:       #d8e6f8;
+  --muted:    #5e7aa4;
+  --accent:   #3ba2ff;
+  --ac-dim:   rgba(59,162,255,.13);
+  --gold:     #edb810;
+  --gold-dim: rgba(237,184,16,.13);
+  --ok:       #22c55e;
+  --ok-dim:   rgba(34,197,94,.13);
+  --no:       #f87171;
+  --no-dim:   rgba(248,113,113,.13);
+  --wait:     #a78bfa;
+  --wait-dim: rgba(167,139,250,.13);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+  padding-inline: 16px;
+  padding-block: 28px 44px;
+  max-width: 660px;
+  margin-inline: auto;
+}
+
+/* ── header ─────────────────────────────────────── */
+.hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.hd-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  flex: 1;
+  min-width: 0;
+}
+.hd-title em { font-style: normal; color: var(--gold); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity .15s;
+}
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn:not(:disabled):hover { opacity: .82; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-ghost   { background: transparent; border-color: var(--border); color: var(--fg); }
+
+/* ── today card ──────────────────────────────────── */
+.today {
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  background: var(--surface);
+}
+.today.ok   { background: var(--ok-dim);   border-color: var(--ok); }
+.today.no   { background: var(--no-dim);   border-color: var(--no); }
+.today.wait { background: var(--wait-dim); border-color: var(--wait); }
+
+.today-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.today-main {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(26px, 5.5vw, 38px);
+  font-weight: 700;
+  line-height: 1.1;
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+.today.ok   .today-main { color: var(--ok); }
+.today.no   .today-main { color: var(--no); }
+.today.wait .today-main { color: var(--wait); }
+.today-sub { font-size: 13px; color: var(--muted); }
+
+/* ── section heading ─────────────────────────────── */
+.sh {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* ── 30-day grid ─────────────────────────────────── */
+.grid30 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(26px, 1fr));
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.dc {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  position: relative;
+  cursor: default;
+  transition: transform .12s;
+}
+.dc:hover { transform: scale(1.18); z-index: 1; }
+.dc.ok  { background: var(--ok); border-color: var(--ok); }
+.dc.no  { background: var(--surface2); }
+.dc.today-dot { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.dc::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 3px 7px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 20;
+}
+.dc:hover::after { opacity: 1; }
+
+/* ── legend ─────────────────────────────────────── */
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+.li { display: flex; align-items: center; gap: 5px; }
+.ld {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+.ld.ok  { background: var(--ok); border-color: var(--ok); }
+.ld.no  { background: var(--surface2); }
+
+/* ── feedback msg ───────────────────────────────── */
+.fmsg {
+  font-size: 13px;
+  padding: 9px 13px;
+  border-radius: 7px;
+  margin-bottom: 20px;
+  display: none;
+}
+.fmsg.show { display: block; }
+.fmsg.ok-m  { background: var(--ok-dim);   color: var(--ok); }
+.fmsg.err-m { background: var(--no-dim);   color: var(--no); }
+
+/* ── footer ─────────────────────────────────────── */
+.ft {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pulse {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  margin-right: 5px;
+  animation: beat 2.2s ease-in-out infinite;
+}
+@keyframes beat { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* ── modal ──────────────────────────────────────── */
+.mbg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 200;
+}
+.mbox {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 26px;
+  width: 100%;
+  max-width: 400px;
+}
+.m-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 19px; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.m-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.field { margin-bottom: 15px; }
+.field label {
+  display: block;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 5px;
+}
+.field input {
+  width: 100%;
+  padding: 9px 11px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--fg);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+.field input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.fhint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.m-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+
+/* skeleton */
+.sk {
+  border-radius: 6px;
+  background: var(--surface2);
+  animation: sk 1.4s ease-in-out infinite;
+}
+@keyframes sk { 0%,100%{opacity:1} 50%{opacity:.35} }
+</style>
+
+<!-- Modal -->
+<div class="mbg" id="modal" hidden>
+  <div class="mbox">
+    <div class="m-title">Configuração</div>
+    <div class="m-sub">Dados salvos apenas neste navegador. Use a chave <strong>anon</strong> do Supabase.</div>
+    <div class="field">
+      <label>Supabase URL</label>
+      <input type="url" id="cfgUrl" placeholder="https://xxxx.supabase.co" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Supabase Anon Key</label>
+      <input type="password" id="cfgAnon" placeholder="eyJ..." autocomplete="off">
+      <div class="fhint">Settings → API → anon public</div>
+    </div>
+    <div class="field">
+      <label>GitHub PAT <span style="font-weight:400;text-transform:none">(opcional · botão Disparar)</span></label>
+      <input type="password" id="cfgPat" placeholder="ghp_..." autocomplete="off">
+      <div class="fhint">Escopo necessário: workflow</div>
+    </div>
+    <div class="m-actions">
+      <button class="btn btn-ghost" id="cfgCancel">Cancelar</button>
+      <button class="btn btn-primary" id="cfgSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="hd">
+  <div class="hd-title">V-Bucks <em>Monitor</em></div>
+  <button class="btn btn-primary" id="btnTrigger">▶ Disparar</button>
+  <button class="btn btn-ghost" id="btnCfg" title="Configurações">⚙</button>
+</div>
+
+<!-- Today -->
+<div class="today" id="todayCard">
+  <div class="today-eyebrow">Hoje</div>
+  <div class="today-main sk" style="height:36px;width:55%;margin-bottom:6px">&nbsp;</div>
+  <div class="today-sub sk" style="height:14px;width:38%">&nbsp;</div>
+</div>
+
+<!-- Feedback -->
+<div class="fmsg" id="fmsg"></div>
+
+<!-- History -->
+<div class="sh">Últimos 30 dias</div>
+<div class="grid30" id="grid"></div>
+<div class="legend">
+  <div class="li"><div class="ld ok"></div>V-Bucks encontrados</div>
+  <div class="li"><div class="ld no"></div>Sem V-Bucks</div>
+  <div class="li"><div class="ld" style="background:transparent"></div>Sem registro</div>
+</div>
+
+<!-- Footer -->
+<div class="ft">
+  <div><span class="pulse"></span>Atualiza a cada 60 s</div>
+  <div id="lastUp">—</div>
+</div>
+
+<script>
+const REPO     = 'ejuanoli/Projetos_Python';
+const WORKFLOW = 'vbucks_alert.yml';
+
+// ── Config ────────────────────────────────────────
+function getCfg()      { try { return JSON.parse(localStorage.getItem('vbm_cfg') || 'null'); } catch { return null; } }
+function setCfg(c)     { try { localStorage.setItem('vbm_cfg', JSON.stringify(c)); } catch {} }
+
+// ── Modal ─────────────────────────────────────────
+const modal = document.getElementById('modal');
+
+function openModal() {
+  const c = getCfg() || {};
+  document.getElementById('cfgUrl').value  = c.url  || '';
+  document.getElementById('cfgAnon').value = c.anon || '';
+  document.getElementById('cfgPat').value  = c.pat  || '';
+  modal.hidden = false;
+}
+function closeModal() { modal.hidden = true; }
+
+document.getElementById('btnCfg').addEventListener('click', openModal);
+document.getElementById('cfgCancel').addEventListener('click', () => {
+  closeModal();
+  // se não tem config, mostra estado vazio em vez de re-abrir o modal
+  if (!getCfg()) renderEmpty();
+});
+document.getElementById('cfgSave').addEventListener('click', () => {
+  const url  = document.getElementById('cfgUrl').value.trim().replace(/\/+$/, '');
+  const anon = document.getElementById('cfgAnon').value.trim();
+  const pat  = document.getElementById('cfgPat').value.trim();
+  if (!url || !anon) { showFeedback('Supabase URL e Anon Key são obrigatórios.', false); return; }
+  setCfg({ url, anon, pat });
+  closeModal();
+  loadData();
+});
+
+// ── Supabase ──────────────────────────────────────
+async function fetchRows(cfg) {
+  const r = await fetch(
+    `${cfg.url}/rest/v1/alertas_vbucks?order=data.desc&limit=60&select=*`,
+    { headers: { apikey: cfg.anon, Authorization: `Bearer ${cfg.anon}` } }
+  );
+  if (!r.ok) throw new Error(`Supabase HTTP ${r.status}`);
+  return r.json();
+}
+
+// ── Render today ──────────────────────────────────
+function todayUTC() { return new Date().toISOString().slice(0, 10); }
+
+function renderToday(row) {
+  const card = document.getElementById('todayCard');
+  const key  = todayUTC();
+  const label = new Date(key + 'T12:00:00Z')
+    .toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  if (!row) {
+    card.className = 'today wait';
+    card.innerHTML = `<div class="today-eyebrow">Hoje · ${label}</div>
+      <div class="today-main">Aguardando verificação</div>
+      <div class="today-sub">Nenhum registro encontrado para hoje</div>`;
+    return;
+  }
+  const hora = new Date(row.enviado_em)
+    .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+
+  if (row.tipo === 'vbucks') {
+    card.className = 'today ok';
+    card.innerHTML = `<div class="today-eyebrow">Hoje · ${label}</div>
+      <div class="today-main">${row.quantidade ?? '?'} V-Bucks disponíveis</div>
+      <div class="today-sub">Alerta enviado às ${hora} BRT</div>`;
+  } else {
+    card.className = 'today no';
+    card.innerHTML = `<div class="today-eyebrow">Hoje · ${label}</div>
+      <div class="today-main">Sem V-Bucks hoje</div>
+      <div class="today-sub">Verificado às ${hora} BRT</div>`;
+  }
+}
+
+// ── Render history ────────────────────────────────
+function renderGrid(rows) {
+  const byDate = Object.fromEntries(rows.map(r => [r.data, r]));
+  const key0   = todayUTC();
+  const grid   = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - i);
+    const k = d.toISOString().slice(0, 10);
+    const lbl = new Date(k + 'T12:00:00Z')
+      .toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+    const row  = byDate[k];
+    const cell = document.createElement('div');
+    cell.className = 'dc' + (k === key0 ? ' today-dot' : '');
+
+    if (row) {
+      if (row.tipo === 'vbucks') {
+        cell.classList.add('ok');
+        cell.dataset.tip = `${lbl}: ${row.quantidade ?? '?'} V-Bucks`;
+      } else {
+        cell.classList.add('no');
+        cell.dataset.tip = `${lbl}: sem V-Bucks`;
+      }
+    } else {
+      cell.dataset.tip = `${lbl}: sem registro`;
+    }
+    grid.appendChild(cell);
+  }
+}
+
+// ── Load ──────────────────────────────────────────
+async function loadData() {
+  const cfg = getCfg();
+  if (!cfg) { openModal(); return; }
+  try {
+    const rows = await fetchRows(cfg);
+    const today = rows.find(r => r.data === todayUTC()) || null;
+    renderToday(today);
+    renderGrid(rows);
+    document.getElementById('lastUp').textContent =
+      'Atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  } catch (err) {
+    const card = document.getElementById('todayCard');
+    card.className = 'today';
+    card.innerHTML = `<div class="today-eyebrow">Erro ao carregar</div>
+      <div class="today-main" style="font-size:18px;color:var(--no)">${err.message}</div>
+      <div class="today-sub">Verifique as configurações (⚙) e a política de leitura no Supabase</div>`;
+  }
+}
+
+// ── Feedback ──────────────────────────────────────
+function showFeedback(msg, ok) {
+  const el = document.getElementById('fmsg');
+  el.textContent = msg;
+  el.className = 'fmsg show ' + (ok ? 'ok-m' : 'err-m');
+  setTimeout(() => { el.className = 'fmsg'; }, 6000);
+}
+
+// ── Trigger workflow ──────────────────────────────
+document.getElementById('btnTrigger').addEventListener('click', async () => {
+  const cfg = getCfg();
+  if (!cfg?.pat) { openModal(); return; }
+  const btn = document.getElementById('btnTrigger');
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}/dispatches`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${cfg.pat}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ref: 'main' })
+      }
+    );
+    if (r.status === 204) {
+      showFeedback('✓ Workflow disparado! Aguarde 1–2 minutos para o resultado.', true);
+    } else {
+      const t = await r.text();
+      throw new Error(`GitHub HTTP ${r.status} — ${t.slice(0, 100)}`);
+    }
+  } catch (err) {
+    showFeedback(err.message, false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Disparar';
+  }
+});
+
+// ── Empty state ───────────────────────────────────
+function renderEmpty() {
+  const card = document.getElementById('todayCard');
+  card.className = 'today';
+  card.innerHTML = `<div class="today-eyebrow">Hoje</div>
+    <div class="today-main" style="font-size:18px;color:var(--muted)">Configure as credenciais (⚙) para carregar os dados</div>`;
+  document.getElementById('grid').innerHTML = Array.from({length:30}, (_,i) =>
+    `<div class="dc${i===29?' today-dot':''}" data-tip="${i===29?'hoje':''}"></div>`
+  ).join('');
+}
+
+// ── Boot ──────────────────────────────────────────
+if (!getCfg()) { openModal(); } else { loadData(); }
+setInterval(loadData, 60_000);
+</script>
