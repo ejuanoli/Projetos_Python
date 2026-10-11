@@ -1,40 +1,38 @@
 <title>V-Bucks Monitor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
 
 <style>
-/* Layout: coluna única, max 660px, centralizada */
+/* Layout: coluna única, max 480px, mobile-first */
 :root {
-  --bg:        #f0f5fc;
-  --surface:   #ffffff;
-  --surface2:  #e4ecf8;
-  --border:    #c9d8ee;
-  --fg:        #0c1524;
-  --muted:     #55698f;
-  --accent:    #1878e8;
-  --ac-dim:    rgba(24,120,232,.10);
-  --gold:      #c08a0f;
-  --gold-dim:  rgba(192,138,15,.12);
-  --ok:        #15803d;
-  --ok-dim:    rgba(21,128,61,.12);
-  --no:        #b91c1c;
-  --no-dim:    rgba(185,28,28,.12);
-  --wait:      #5b21b6;
-  --wait-dim:  rgba(91,33,182,.10);
-  --r: 10px;
+  --bg:       #f0f5fc;
+  --surf:     #ffffff;
+  --surf2:    #e3ecf8;
+  --border:   #c8d7ee;
+  --fg:       #0b1422;
+  --muted:    #536480;
+  --ac:       #1677e8;
+  --ac-dim:   rgba(22,119,232,.10);
+  --gold:     #b8820e;
+  --ok:       #15803d;
+  --ok-dim:   rgba(21,128,61,.11);
+  --no:       #b91c1c;
+  --no-dim:   rgba(185,28,28,.11);
+  --wait:     #5b21b6;
+  --wait-dim: rgba(91,33,182,.10);
+  --r: 12px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg:       #07101e;
-    --surface:  #0e1929;
-    --surface2: #152236;
-    --border:   #1b2d46;
-    --fg:       #d8e6f8;
-    --muted:    #5e7aa4;
-    --accent:   #3ba2ff;
-    --ac-dim:   rgba(59,162,255,.13);
-    --gold:     #edb810;
-    --gold-dim: rgba(237,184,16,.13);
+    --bg:       #060e1b;
+    --surf:     #0c1828;
+    --surf2:    #122033;
+    --border:   #182d47;
+    --fg:       #d4e3f7;
+    --muted:    #5a7699;
+    --ac:       #3da0ff;
+    --ac-dim:   rgba(61,160,255,.13);
+    --gold:     #eab308;
     --ok:       #22c55e;
     --ok-dim:   rgba(34,197,94,.13);
     --no:       #f87171;
@@ -45,16 +43,15 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg:       #07101e;
-  --surface:  #0e1929;
-  --surface2: #152236;
-  --border:   #1b2d46;
-  --fg:       #d8e6f8;
-  --muted:    #5e7aa4;
-  --accent:   #3ba2ff;
-  --ac-dim:   rgba(59,162,255,.13);
-  --gold:     #edb810;
-  --gold-dim: rgba(237,184,16,.13);
+  --bg:       #060e1b;
+  --surf:     #0c1828;
+  --surf2:    #122033;
+  --border:   #182d47;
+  --fg:       #d4e3f7;
+  --muted:    #5a7699;
+  --ac:       #3da0ff;
+  --ac-dim:   rgba(61,160,255,.13);
+  --gold:     #eab308;
   --ok:       #22c55e;
   --ok-dim:   rgba(34,197,94,.13);
   --no:       #f87171;
@@ -66,6 +63,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+html, body { height: 100%; }
+
 body {
   background: var(--bg);
   color: var(--fg);
@@ -74,259 +73,262 @@ body {
   line-height: 1.5;
   margin: 0;
   padding-inline: 16px;
-  padding-block: 28px 44px;
-  max-width: 660px;
+  padding-block: 16px 48px;
+  max-width: 480px;
   margin-inline: auto;
 }
 
-/* ── header ─────────────────────────────────────── */
+/* ── header ─────────────────────── */
 .hd {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 28px;
+  gap: 8px;
+  margin-bottom: 20px;
 }
-.hd-title {
+.hd-logo {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
   flex: 1;
-  min-width: 0;
+  line-height: 1;
 }
-.hd-title em { font-style: normal; color: var(--gold); }
+.hd-logo span { color: var(--gold); }
 
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  padding: 7px 14px;
-  border-radius: 7px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
-  line-height: 1;
   white-space: nowrap;
   transition: opacity .15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-.btn:not(:disabled):hover { opacity: .82; }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-ghost   { background: transparent; border-color: var(--border); color: var(--fg); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:not(:disabled):active { opacity: .7; }
+.btn-primary { background: var(--ac); color: #fff; }
+.btn-ghost   { background: transparent; border-color: var(--border); color: var(--fg); min-width: 40px; padding: 0 10px; }
 
-/* ── today card ──────────────────────────────────── */
+/* ── today card ─────────────────── */
 .today {
   border-radius: var(--r);
   border: 1px solid var(--border);
-  padding: 22px 24px;
-  margin-bottom: 24px;
-  background: var(--surface);
+  padding: 20px;
+  margin-bottom: 16px;
+  background: var(--surf);
 }
 .today.ok   { background: var(--ok-dim);   border-color: var(--ok); }
 .today.no   { background: var(--no-dim);   border-color: var(--no); }
 .today.wait { background: var(--wait-dim); border-color: var(--wait); }
 
-.today-eyebrow {
+.today-eye {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .13em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 6px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 4px;
 }
 .today-main {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: clamp(26px, 5.5vw, 38px);
-  font-weight: 700;
-  line-height: 1.1;
+  font-size: clamp(24px, 7vw, 34px);
+  font-weight: 700; line-height: 1.1;
   text-wrap: balance;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 .today.ok   .today-main { color: var(--ok); }
 .today.no   .today-main { color: var(--no); }
 .today.wait .today-main { color: var(--wait); }
-.today-sub { font-size: 13px; color: var(--muted); }
+.today-sub { font-size: 12px; color: var(--muted); }
 
-/* ── section heading ─────────────────────────────── */
+/* ── section heading ─────────────── */
 .sh {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .13em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 12px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 10px;
+  margin-top: 20px;
 }
 
-/* ── 30-day grid ─────────────────────────────────── */
+/* ── 30-day grid ─────────────────── */
 .grid30 {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(26px, 1fr));
-  gap: 5px;
-  margin-bottom: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
+  gap: 4px;
+  margin-bottom: 6px;
 }
 .dc {
   aspect-ratio: 1;
-  border-radius: 5px;
-  background: var(--surface2);
+  border-radius: 4px;
+  background: var(--surf2);
   border: 1px solid var(--border);
   position: relative;
   cursor: default;
-  transition: transform .12s;
 }
-.dc:hover { transform: scale(1.18); z-index: 1; }
 .dc.ok  { background: var(--ok); border-color: var(--ok); }
-.dc.no  { background: var(--surface2); }
-.dc.today-dot { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dc.no  { background: var(--surf2); }
+.dc.td  { outline: 2px solid var(--ac); outline-offset: 2px; }
 
-.dc::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--fg);
-  color: var(--bg);
-  font-size: 11px;
-  white-space: nowrap;
-  padding: 3px 7px;
-  border-radius: 4px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .15s;
-  z-index: 20;
+/* tooltip — só desktop (hover) */
+@media (hover: hover) {
+  .dc::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 5px);
+    left: 50%; transform: translateX(-50%);
+    background: var(--fg); color: var(--bg);
+    font-size: 10px; white-space: nowrap;
+    padding: 3px 6px; border-radius: 4px;
+    pointer-events: none; opacity: 0;
+    transition: opacity .12s; z-index: 10;
+  }
+  .dc:hover::after { opacity: 1; }
 }
-.dc:hover::after { opacity: 1; }
 
-/* ── legend ─────────────────────────────────────── */
 .legend {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 28px;
+  display: flex; gap: 12px; flex-wrap: wrap;
+  font-size: 11px; color: var(--muted);
+  margin-bottom: 4px;
 }
-.li { display: flex; align-items: center; gap: 5px; }
-.ld {
-  width: 10px; height: 10px;
-  border-radius: 3px;
-  border: 1px solid var(--border);
-}
-.ld.ok  { background: var(--ok); border-color: var(--ok); }
-.ld.no  { background: var(--surface2); }
+.li { display: flex; align-items: center; gap: 4px; }
+.ld { width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--border); }
+.ld.ok { background: var(--ok); border-color: var(--ok); }
 
-/* ── feedback msg ───────────────────────────────── */
+/* ── runs ────────────────────────── */
+.run-list { display: flex; flex-direction: column; gap: 8px; }
+
+.run-card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .12s;
+}
+.run-card:active { background: var(--surf2); }
+
+.run-icon {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.run-icon.ok   { background: var(--ok-dim);   color: var(--ok); }
+.run-icon.no   { background: var(--no-dim);    color: var(--no); }
+.run-icon.run  { background: var(--ac-dim);    color: var(--ac); }
+.run-icon.skip { background: var(--surf2);     color: var(--muted); }
+
+.run-info { min-width: 0; }
+.run-title {
+  font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.run-meta { font-size: 11px; color: var(--muted); }
+
+.run-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 20px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.run-badge.ok   { background: var(--ok-dim);  color: var(--ok); }
+.run-badge.no   { background: var(--no-dim);  color: var(--no); }
+.run-badge.run  { background: var(--ac-dim);  color: var(--ac); }
+.run-badge.skip { background: var(--surf2);   color: var(--muted); }
+
+/* ── feedback ────────────────────── */
 .fmsg {
-  font-size: 13px;
-  padding: 9px 13px;
-  border-radius: 7px;
-  margin-bottom: 20px;
-  display: none;
+  font-size: 13px; padding: 10px 13px;
+  border-radius: 8px; margin-bottom: 14px; display: none;
 }
 .fmsg.show { display: block; }
-.fmsg.ok-m  { background: var(--ok-dim);   color: var(--ok); }
-.fmsg.err-m { background: var(--no-dim);   color: var(--no); }
+.fmsg.ok-m  { background: var(--ok-dim); color: var(--ok); }
+.fmsg.err-m { background: var(--no-dim); color: var(--no); }
 
-/* ── footer ─────────────────────────────────────── */
+/* ── footer ──────────────────────── */
 .ft {
-  font-size: 12px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
+  font-size: 11px; color: var(--muted);
+  display: flex; align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: wrap; gap: 6px;
+  margin-top: 24px;
 }
 .pulse {
   display: inline-block;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--ok);
-  margin-right: 5px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--ok); margin-right: 5px;
   animation: beat 2.2s ease-in-out infinite;
 }
-@keyframes beat { 0%,100%{opacity:1} 50%{opacity:.25} }
+@keyframes beat { 0%,100%{opacity:1} 50%{opacity:.2} }
 
-/* ── modal ──────────────────────────────────────── */
+/* ── modal (só PAT) ──────────────── */
 .mbg {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.6);
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
   backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  z-index: 200;
+  display: flex; align-items: flex-end;
+  padding: 0; z-index: 200;
 }
 .mbox {
-  background: var(--surface);
+  background: var(--surf);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 28px 26px;
+  border-radius: 16px 16px 0 0;
+  padding: 24px 20px 32px;
   width: 100%;
-  max-width: 400px;
 }
 .m-title {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 19px; font-weight: 700;
+  font-size: 17px; font-weight: 700;
   letter-spacing: .05em; text-transform: uppercase;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
-.m-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-.field { margin-bottom: 15px; }
+.m-sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+.field { margin-bottom: 16px; }
 .field label {
-  display: block;
-  font-size: 11px; font-weight: 600;
-  letter-spacing: .09em; text-transform: uppercase;
+  display: block; font-size: 10px; font-weight: 600;
+  letter-spacing: .10em; text-transform: uppercase;
   color: var(--muted); margin-bottom: 5px;
 }
 .field input {
-  width: 100%;
-  padding: 9px 11px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  color: var(--fg);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
+  width: 100%; padding: 11px 13px;
+  background: var(--surf2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--fg);
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  min-height: 44px;
 }
-.field input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.field input:focus { outline: 2px solid var(--ac); border-color: transparent; }
 .fhint { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.m-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+.m-actions { display: flex; gap: 8px; }
+.m-actions .btn { flex: 1; min-height: 46px; font-size: 14px; }
 
 /* skeleton */
-.sk {
-  border-radius: 6px;
-  background: var(--surface2);
-  animation: sk 1.4s ease-in-out infinite;
-}
-@keyframes sk { 0%,100%{opacity:1} 50%{opacity:.35} }
+.sk { border-radius: 6px; background: var(--surf2); animation: sk 1.4s ease-in-out infinite; }
+@keyframes sk { 0%,100%{opacity:1} 50%{opacity:.3} }
 </style>
 
-<!-- Modal -->
+<!-- Modal só do PAT -->
 <div class="mbg" id="modal" hidden>
   <div class="mbox">
-    <div class="m-title">Configuração</div>
-    <div class="m-sub">Dados salvos apenas neste navegador. Use a chave <strong>anon</strong> do Supabase.</div>
+    <div class="m-title">GitHub PAT</div>
+    <div class="m-sub">Necessário para o botão Disparar. Escopo: <strong>workflow</strong>. Salvo só neste navegador.</div>
     <div class="field">
-      <label>Supabase URL</label>
-      <input type="url" id="cfgUrl" placeholder="https://xxxx.supabase.co" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>Supabase Anon Key</label>
-      <input type="password" id="cfgAnon" placeholder="eyJ..." autocomplete="off">
-      <div class="fhint">Settings → API → anon public</div>
-    </div>
-    <div class="field">
-      <label>GitHub PAT <span style="font-weight:400;text-transform:none">(opcional · botão Disparar)</span></label>
+      <label>Personal Access Token</label>
       <input type="password" id="cfgPat" placeholder="ghp_..." autocomplete="off">
-      <div class="fhint">Escopo necessário: workflow</div>
+      <div class="fhint">github.com → Settings → Developer settings → Tokens (classic)</div>
     </div>
     <div class="m-actions">
       <button class="btn btn-ghost" id="cfgCancel">Cancelar</button>
@@ -337,16 +339,16 @@ body {
 
 <!-- Header -->
 <div class="hd">
-  <div class="hd-title">V-Bucks <em>Monitor</em></div>
+  <div class="hd-logo">V-Bucks <span>Monitor</span></div>
   <button class="btn btn-primary" id="btnTrigger">▶ Disparar</button>
-  <button class="btn btn-ghost" id="btnCfg" title="Configurações">⚙</button>
+  <button class="btn btn-ghost" id="btnCfg" title="PAT">⚙</button>
 </div>
 
 <!-- Today -->
 <div class="today" id="todayCard">
-  <div class="today-eyebrow">Hoje</div>
-  <div class="today-main sk" style="height:36px;width:55%;margin-bottom:6px">&nbsp;</div>
-  <div class="today-sub sk" style="height:14px;width:38%">&nbsp;</div>
+  <div class="today-eye">Hoje</div>
+  <div class="today-main sk" style="height:32px;width:60%;margin-bottom:5px">&nbsp;</div>
+  <div class="today-sub sk" style="height:13px;width:40%">&nbsp;</div>
 </div>
 
 <!-- Feedback -->
@@ -355,10 +357,18 @@ body {
 <!-- History -->
 <div class="sh">Últimos 30 dias</div>
 <div class="grid30" id="grid"></div>
-<div class="legend">
-  <div class="li"><div class="ld ok"></div>V-Bucks encontrados</div>
+<div class="legend" style="margin-top:6px">
+  <div class="li"><div class="ld ok"></div>V-Bucks</div>
   <div class="li"><div class="ld no"></div>Sem V-Bucks</div>
-  <div class="li"><div class="ld" style="background:transparent"></div>Sem registro</div>
+  <div class="li"><div class="ld"></div>Sem registro</div>
+</div>
+
+<!-- Runs -->
+<div class="sh">Últimas execuções</div>
+<div class="run-list" id="runList">
+  <div class="sk" style="height:56px;border-radius:10px"></div>
+  <div class="sk" style="height:56px;border-radius:10px"></div>
+  <div class="sk" style="height:56px;border-radius:10px"></div>
 </div>
 
 <!-- Footer -->
@@ -368,190 +378,191 @@ body {
 </div>
 
 <script>
-const REPO     = 'ejuanoli/Projetos_Python';
-const WORKFLOW = 'vbucks_alert.yml';
+// ── Credenciais fixas ─────────────────────────────
+const SB_URL  = 'https://otytppcftpqtdpmfxkic.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eXRwcGNmdHBxdGRwbWZ4a2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5ODEyMzAsImV4cCI6MjEwNjU1NzIzMH0.l7WiV2gIGAR02F4mRukKtzse1X3qfXSAp9j9QZFGZ5w';
+const REPO    = 'ejuanoli/Projetos_Python';
+const WF      = 'vbucks_alert.yml';
 
-// ── Config ────────────────────────────────────────
-function getCfg()      { try { return JSON.parse(localStorage.getItem('vbm_cfg') || 'null'); } catch { return null; } }
-function setCfg(c)     { try { localStorage.setItem('vbm_cfg', JSON.stringify(c)); } catch {} }
+// ── PAT no localStorage ───────────────────────────
+function getPat() { try { return localStorage.getItem('vbm_pat') || ''; } catch { return ''; } }
+function setPat(v){ try { localStorage.setItem('vbm_pat', v); } catch {} }
 
 // ── Modal ─────────────────────────────────────────
 const modal = document.getElementById('modal');
-
 function openModal() {
-  const c = getCfg() || {};
-  document.getElementById('cfgUrl').value  = c.url  || '';
-  document.getElementById('cfgAnon').value = c.anon || '';
-  document.getElementById('cfgPat').value  = c.pat  || '';
+  document.getElementById('cfgPat').value = getPat();
   modal.hidden = false;
 }
 function closeModal() { modal.hidden = true; }
 
 document.getElementById('btnCfg').addEventListener('click', openModal);
-document.getElementById('cfgCancel').addEventListener('click', () => {
-  closeModal();
-  // se não tem config, mostra estado vazio em vez de re-abrir o modal
-  if (!getCfg()) renderEmpty();
-});
+document.getElementById('cfgCancel').addEventListener('click', closeModal);
 document.getElementById('cfgSave').addEventListener('click', () => {
-  const url  = document.getElementById('cfgUrl').value.trim().replace(/\/+$/, '');
-  const anon = document.getElementById('cfgAnon').value.trim();
-  const pat  = document.getElementById('cfgPat').value.trim();
-  if (!url || !anon) { showFeedback('Supabase URL e Anon Key são obrigatórios.', false); return; }
-  setCfg({ url, anon, pat });
+  const v = document.getElementById('cfgPat').value.trim();
+  setPat(v);
   closeModal();
-  loadData();
 });
 
 // ── Supabase ──────────────────────────────────────
-async function fetchRows(cfg) {
+async function fetchAlertas() {
   const r = await fetch(
-    `${cfg.url}/rest/v1/alertas_vbucks?order=data.desc&limit=60&select=*`,
-    { headers: { apikey: cfg.anon, Authorization: `Bearer ${cfg.anon}` } }
+    `${SB_URL}/rest/v1/alertas_vbucks?order=data.desc&limit=60&select=*`,
+    { headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}` } }
   );
-  if (!r.ok) throw new Error(`Supabase HTTP ${r.status}`);
+  if (!r.ok) throw new Error(`Supabase ${r.status}`);
   return r.json();
 }
 
-// ── Render today ──────────────────────────────────
-function todayUTC() { return new Date().toISOString().slice(0, 10); }
+// ── GitHub runs ───────────────────────────────────
+async function fetchRuns() {
+  const headers = { Accept: 'application/vnd.github+json' };
+  const pat = getPat();
+  if (pat) headers.Authorization = `Bearer ${pat}`;
+  const r = await fetch(
+    `https://api.github.com/repos/${REPO}/actions/workflows/${WF}/runs?per_page=8`,
+    { headers }
+  );
+  if (!r.ok) throw new Error(`GitHub ${r.status}`);
+  return (await r.json()).workflow_runs || [];
+}
+
+// ── Today ─────────────────────────────────────────
+function todayUTC() { return new Date().toISOString().slice(0,10); }
 
 function renderToday(row) {
   const card = document.getElementById('todayCard');
   const key  = todayUTC();
   const label = new Date(key + 'T12:00:00Z')
     .toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-
   if (!row) {
     card.className = 'today wait';
-    card.innerHTML = `<div class="today-eyebrow">Hoje · ${label}</div>
-      <div class="today-main">Aguardando verificação</div>
-      <div class="today-sub">Nenhum registro encontrado para hoje</div>`;
+    card.innerHTML = `<div class="today-eye">Hoje · ${label}</div>
+      <div class="today-main">Aguardando...</div>
+      <div class="today-sub">Nenhum registro encontrado ainda</div>`;
     return;
   }
   const hora = new Date(row.enviado_em)
-    .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
-
+    .toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
   if (row.tipo === 'vbucks') {
     card.className = 'today ok';
-    card.innerHTML = `<div class="today-eyebrow">Hoje · ${label}</div>
-      <div class="today-main">${row.quantidade ?? '?'} V-Bucks disponíveis</div>
+    card.innerHTML = `<div class="today-eye">Hoje · ${label}</div>
+      <div class="today-main">${row.quantidade ?? '?'} V-Bucks 🎯</div>
       <div class="today-sub">Alerta enviado às ${hora} BRT</div>`;
   } else {
     card.className = 'today no';
-    card.innerHTML = `<div class="today-eyebrow">Hoje · ${label}</div>
+    card.innerHTML = `<div class="today-eye">Hoje · ${label}</div>
       <div class="today-main">Sem V-Bucks hoje</div>
       <div class="today-sub">Verificado às ${hora} BRT</div>`;
   }
 }
 
-// ── Render history ────────────────────────────────
+// ── Grid 30 dias ──────────────────────────────────
 function renderGrid(rows) {
   const byDate = Object.fromEntries(rows.map(r => [r.data, r]));
   const key0   = todayUTC();
   const grid   = document.getElementById('grid');
   grid.innerHTML = '';
-
   for (let i = 29; i >= 0; i--) {
     const d = new Date();
     d.setUTCDate(d.getUTCDate() - i);
-    const k = d.toISOString().slice(0, 10);
+    const k   = d.toISOString().slice(0,10);
     const lbl = new Date(k + 'T12:00:00Z')
-      .toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-
-    const row  = byDate[k];
-    const cell = document.createElement('div');
-    cell.className = 'dc' + (k === key0 ? ' today-dot' : '');
-
+      .toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+    const row = byDate[k];
+    const el  = document.createElement('div');
+    el.className = 'dc' + (k === key0 ? ' td' : '');
     if (row) {
-      if (row.tipo === 'vbucks') {
-        cell.classList.add('ok');
-        cell.dataset.tip = `${lbl}: ${row.quantidade ?? '?'} V-Bucks`;
-      } else {
-        cell.classList.add('no');
-        cell.dataset.tip = `${lbl}: sem V-Bucks`;
-      }
+      el.classList.add(row.tipo === 'vbucks' ? 'ok' : 'no');
+      el.dataset.tip = row.tipo === 'vbucks'
+        ? `${lbl}: ${row.quantidade ?? '?'} V-Bucks`
+        : `${lbl}: sem V-Bucks`;
     } else {
-      cell.dataset.tip = `${lbl}: sem registro`;
+      el.dataset.tip = `${lbl}: sem registro`;
     }
-    grid.appendChild(cell);
+    grid.appendChild(el);
   }
 }
 
-// ── Load ──────────────────────────────────────────
-async function loadData() {
-  const cfg = getCfg();
-  if (!cfg) { openModal(); return; }
-  try {
-    const rows = await fetchRows(cfg);
-    const today = rows.find(r => r.data === todayUTC()) || null;
-    renderToday(today);
-    renderGrid(rows);
-    document.getElementById('lastUp').textContent =
-      'Atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  } catch (err) {
-    const card = document.getElementById('todayCard');
-    card.className = 'today';
-    card.innerHTML = `<div class="today-eyebrow">Erro ao carregar</div>
-      <div class="today-main" style="font-size:18px;color:var(--no)">${err.message}</div>
-      <div class="today-sub">Verifique as configurações (⚙) e a política de leitura no Supabase</div>`;
-  }
+// ── Runs ──────────────────────────────────────────
+const RUN_LABELS = {
+  success:   ['ok',  '✓', 'Sucesso'],
+  failure:   ['no',  '✗', 'Falhou'],
+  in_progress:['run','⟳', 'Rodando'],
+  cancelled: ['skip','—', 'Cancelado'],
+  skipped:   ['skip','—', 'Ignorado'],
+};
+const EVENT_PT = { schedule: 'Agendado', workflow_dispatch: 'Manual', push: 'Push' };
+
+function renderRuns(runs) {
+  const list = document.getElementById('runList');
+  if (!runs.length) { list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Nenhuma execução encontrada.</div>'; return; }
+  list.innerHTML = runs.map(run => {
+    const conc   = run.conclusion || (run.status === 'in_progress' ? 'in_progress' : 'skipped');
+    const [cls, icon, label] = RUN_LABELS[conc] || ['skip','?', conc];
+    const dt     = new Date(run.created_at)
+      .toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
+    const evento = EVENT_PT[run.event] || run.event;
+    const dur    = run.updated_at && run.status === 'completed'
+      ? Math.round((new Date(run.updated_at) - new Date(run.created_at)) / 1000) + 's'
+      : '';
+    return `<a class="run-card" href="${run.html_url}" target="_blank" rel="noopener">
+      <div class="run-icon ${cls}">${icon}</div>
+      <div class="run-info">
+        <div class="run-title">${dt} BRT</div>
+        <div class="run-meta">${evento}${dur ? ' · ' + dur : ''}</div>
+      </div>
+      <div class="run-badge ${cls}">${label}</div>
+    </a>`;
+  }).join('');
 }
 
 // ── Feedback ──────────────────────────────────────
-function showFeedback(msg, ok) {
+function showMsg(txt, ok) {
   const el = document.getElementById('fmsg');
-  el.textContent = msg;
+  el.textContent = txt;
   el.className = 'fmsg show ' + (ok ? 'ok-m' : 'err-m');
   setTimeout(() => { el.className = 'fmsg'; }, 6000);
 }
 
-// ── Trigger workflow ──────────────────────────────
+// ── Trigger ───────────────────────────────────────
 document.getElementById('btnTrigger').addEventListener('click', async () => {
-  const cfg = getCfg();
-  if (!cfg?.pat) { openModal(); return; }
+  const pat = getPat();
+  if (!pat) { openModal(); return; }
   const btn = document.getElementById('btnTrigger');
-  btn.disabled = true;
-  btn.textContent = '⏳';
+  btn.disabled = true; btn.textContent = '⟳';
   try {
     const r = await fetch(
-      `https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW}/dispatches`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${cfg.pat}`,
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ ref: 'main' })
-      }
+      `https://api.github.com/repos/${REPO}/actions/workflows/${WF}/dispatches`,
+      { method:'POST',
+        headers:{ Authorization:`Bearer ${pat}`, Accept:'application/vnd.github+json', 'Content-Type':'application/json' },
+        body: JSON.stringify({ ref:'main' }) }
     );
     if (r.status === 204) {
-      showFeedback('✓ Workflow disparado! Aguarde 1–2 minutos para o resultado.', true);
+      showMsg('✓ Workflow disparado! Resultado em ~2 minutos.', true);
+      setTimeout(loadData, 8000);
     } else {
-      const t = await r.text();
-      throw new Error(`GitHub HTTP ${r.status} — ${t.slice(0, 100)}`);
+      throw new Error(`GitHub ${r.status}`);
     }
-  } catch (err) {
-    showFeedback(err.message, false);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '▶ Disparar';
-  }
+  } catch(e) { showMsg(e.message, false); }
+  finally { btn.disabled = false; btn.textContent = '▶ Disparar'; }
 });
 
-// ── Empty state ───────────────────────────────────
-function renderEmpty() {
-  const card = document.getElementById('todayCard');
-  card.className = 'today';
-  card.innerHTML = `<div class="today-eyebrow">Hoje</div>
-    <div class="today-main" style="font-size:18px;color:var(--muted)">Configure as credenciais (⚙) para carregar os dados</div>`;
-  document.getElementById('grid').innerHTML = Array.from({length:30}, (_,i) =>
-    `<div class="dc${i===29?' today-dot':''}" data-tip="${i===29?'hoje':''}"></div>`
-  ).join('');
+// ── Load ──────────────────────────────────────────
+async function loadData() {
+  try {
+    const [alertas, runs] = await Promise.all([fetchAlertas(), fetchRuns()]);
+    renderToday(alertas.find(r => r.data === todayUTC()) || null);
+    renderGrid(alertas);
+    renderRuns(runs);
+    document.getElementById('lastUp').textContent =
+      'Atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  } catch(e) {
+    showMsg('Erro ao carregar: ' + e.message, false);
+  }
 }
 
 // ── Boot ──────────────────────────────────────────
-if (!getCfg()) { openModal(); } else { loadData(); }
+loadData();
 setInterval(loadData, 60_000);
 </script>
