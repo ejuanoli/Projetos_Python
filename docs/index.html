@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
 
 <style>
-/* Layout: coluna única, max 480px, mobile-first */
 :root {
   --bg:       #f0f5fc;
   --surf:     #ffffff;
@@ -98,7 +97,11 @@ body {
   text-transform: uppercase;
   flex: 1;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
+.hd-logo img { display: block; }
 .hd-logo span { color: var(--gold); }
 
 .btn {
@@ -198,7 +201,6 @@ body {
 .wdc.ok     { background: var(--ok);     border-color: var(--ok); }
 .wdc.no     { background: var(--no-dim); border-color: var(--no); }
 .wdc.wait   { background: var(--surf2); }
-.wdc.future { background: var(--surf2); opacity: .3; }
 .wdc.td     { outline: 2px solid var(--ac); outline-offset: 2px; }
 .wdc-dow {
   font-family: 'Barlow Condensed', sans-serif;
@@ -219,59 +221,47 @@ body {
 .wdc-q    { font-size: 12px; color: var(--muted); }
 @media (max-width: 380px) { .hd-label { display: none; } }
 
-/* ── 30-day grid ─────────────────── */
-.grid30 {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
-  margin-bottom: 6px;
-}
-.dh {
-  text-align: center;
-  font-size: 9px; font-weight: 700;
-  letter-spacing: .06em; text-transform: uppercase;
-  color: var(--muted); padding-bottom: 4px;
-}
-.dc {
-  aspect-ratio: 1;
-  border-radius: 5px;
-  background: var(--surf2);
+/* ── missions accordion ──────────── */
+.mission-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.mission-day {
+  background: var(--surf);
   border: 1px solid var(--border);
-  position: relative;
-  cursor: default;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 600;
-  color: var(--muted);
+  border-radius: 10px;
+  overflow: hidden;
 }
-.dc.ok  { background: var(--ok); border-color: var(--ok); color: #fff; }
-.dc.no  { background: var(--no-dim); border-color: var(--no); color: var(--no); }
-.dc.td  { outline: 2px solid var(--ac); outline-offset: 2px; }
-.dc.empty { background: transparent; border-color: transparent; }
-
-/* tooltip — só desktop (hover) */
-@media (hover: hover) {
-  .dc:not(.empty)::after {
-    content: attr(data-tip);
-    position: absolute;
-    bottom: calc(100% + 5px);
-    left: 50%; transform: translateX(-50%);
-    background: var(--fg); color: var(--bg);
-    font-size: 10px; white-space: nowrap;
-    padding: 3px 6px; border-radius: 4px;
-    pointer-events: none; opacity: 0;
-    transition: opacity .12s; z-index: 10;
-  }
-  .dc:not(.empty):hover::after { opacity: 1; }
+.mission-day.ok  { border-color: var(--ok); }
+.mission-day.no  { border-color: var(--no); }
+.mission-sum {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 12px 14px;
+  cursor: pointer; list-style: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
-
-.legend {
-  display: flex; gap: 12px; flex-wrap: wrap;
-  font-size: 11px; color: var(--muted);
-  margin-bottom: 4px;
+.mission-sum::-webkit-details-marker { display: none; }
+.mission-sum::after {
+  content: '▾';
+  font-size: 12px; color: var(--muted); flex-shrink: 0;
+  transition: transform .2s;
 }
-.li { display: flex; align-items: center; gap: 5px; }
-.ld { width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--border); }
-.ld.no  { background: var(--no-dim); border-color: var(--no); }
+.mission-day[open] .mission-sum::after { transform: rotate(-180deg); }
+.mission-dow { font-size: 13px; font-weight: 600; flex: 1; min-width: 0; }
+.mission-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
+}
+.mission-badge.ok  { background: var(--ok-dim); color: var(--ok); }
+.mission-badge.no  { background: var(--no-dim); color: var(--no); }
+.mission-badge.wait { background: var(--wait-dim); color: var(--wait); }
+.mission-body {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+}
+.mission-detail { display: flex; align-items: center; gap: 8px; padding-top: 10px; }
+.mission-detail img { flex-shrink: 0; }
+.mission-qty { font-size: 18px; font-weight: 700; color: var(--ok); line-height: 1; }
+.mission-time { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
 /* ── runs ────────────────────────── */
 .run-list { display: flex; flex-direction: column; gap: 8px; }
@@ -371,7 +361,17 @@ body {
 }
 .btn-more:hover { background: var(--border); }
 
-/* ── modal (só PAT) ──────────────── */
+/* ── legend ──────────────────────── */
+.legend {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  font-size: 11px; color: var(--muted);
+  margin-bottom: 4px;
+}
+.li { display: flex; align-items: center; gap: 5px; }
+.ld { width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--border); }
+.ld.no  { background: var(--no-dim); border-color: var(--no); }
+
+/* ── modal backdrop ──────────────── */
 .mbg {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.65);
@@ -385,7 +385,10 @@ body {
   border-radius: 16px 16px 0 0;
   padding: 24px 20px 32px;
   width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
+
 .m-title {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 17px; font-weight: 700;
@@ -411,33 +414,161 @@ body {
 .m-actions { display: flex; gap: 8px; }
 .m-actions .btn { flex: 1; min-height: 46px; font-size: 14px; }
 
+/* ── login tabs ───────────────────── */
+.login-tabs {
+  display: flex; gap: 0;
+  background: var(--surf2); border-radius: 8px;
+  padding: 3px; margin-bottom: 20px;
+}
+.login-tab {
+  flex: 1; padding: 7px 0;
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--muted); border-radius: 6px;
+  cursor: pointer; border: none; background: transparent;
+  transition: background .15s, color .15s;
+}
+.login-tab.active { background: var(--surf); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+/* ── WhatsApp setup steps ────────── */
+.wz-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--surf2); border-radius: 8px;
+  cursor: pointer; border: none; width: 100%; color: var(--fg);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  margin-bottom: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+.wz-toggle-label { display: flex; align-items: center; gap: 8px; }
+.wz-pill {
+  font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 20px;
+  background: var(--surf2); color: var(--muted); border: 1px solid var(--border);
+}
+.wz-pill.on { background: var(--ok-dim); color: var(--ok); border-color: var(--ok); }
+.wz-steps {
+  background: var(--surf2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+  display: none;
+}
+.wz-steps.open { display: block; }
+.wz-step {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin-bottom: 12px;
+}
+.wz-step:last-of-type { margin-bottom: 0; }
+.wz-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--ac); color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.wz-step p { font-size: 12px; color: var(--fg); margin: 0; line-height: 1.5; }
+.wz-step code {
+  display: inline-block; background: var(--surf); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 6px; font-size: 11px; color: var(--ac);
+  word-break: break-all;
+}
+
 /* skeleton */
 .sk { border-radius: 6px; background: var(--surf2); animation: sk 1.4s ease-in-out infinite; }
 @keyframes sk { 0%,100%{opacity:1} 50%{opacity:.3} }
 </style>
 
-<!-- Tela de login (cobre tudo) -->
+<!-- Tela de login/cadastro -->
 <div class="mbg" id="loginScreen" style="align-items:center">
   <div class="mbox" style="border-radius:16px">
-    <div style="text-align:center;margin-bottom:20px">
-      <div class="hd-logo" style="font-size:24px;display:block;margin-bottom:4px">V-Bucks <span>Monitor</span></div>
+    <div style="text-align:center;margin-bottom:18px">
+      <div class="hd-logo" style="font-size:22px;display:inline-flex;align-items:center;gap:8px;justify-content:center;margin-bottom:4px">
+        <img src="data:image/png;base64,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" alt="V-Bucks" width="26" height="26" style="object-fit:contain">
+        V-Bucks <span>Monitor</span>
+      </div>
       <div style="font-size:12px;color:var(--muted)">Entre para continuar</div>
     </div>
-    <div class="field">
-      <label>Usuário</label>
-      <input type="text" id="loginUser" placeholder="usuario" autocomplete="username" autocapitalize="none">
+
+    <!-- Tabs entrar/criar -->
+    <div class="login-tabs">
+      <button type="button" class="login-tab active" id="tabEntrar">Entrar</button>
+      <button type="button" class="login-tab" id="tabCriar">Criar conta</button>
     </div>
-    <div class="field">
-      <label>Senha</label>
-      <div class="pass-wrap">
-        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
-        <button type="button" class="btn-eye" id="btnShowPass" title="Mostrar senha">
-          <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+
+    <!-- Formulário de login -->
+    <div id="formLogin">
+      <div class="field">
+        <label for="loginUser">Usuário</label>
+        <input type="text" id="loginUser" placeholder="usuario" autocomplete="username" autocapitalize="none">
       </div>
+      <div class="field">
+        <label for="loginPass">Senha</label>
+        <div class="pass-wrap">
+          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="btn-eye" id="btnShowPass" title="Mostrar senha">
+            <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="loginErr" style="font-size:12px;color:var(--no);margin-bottom:12px;display:none">Usuário ou senha incorretos.</div>
+      <button type="button" class="btn btn-primary" id="btnLogin" style="width:100%;min-height:46px;font-size:15px">Entrar</button>
     </div>
-    <div id="loginErr" style="font-size:12px;color:var(--no);margin-bottom:12px;display:none">Usuário ou senha incorretos.</div>
-    <button type="button" class="btn btn-primary" id="btnLogin" style="width:100%;min-height:46px;font-size:15px">Entrar</button>
+
+    <!-- Formulário de cadastro -->
+    <div id="formCadastro" hidden>
+      <div class="field">
+        <label for="regUser">Usuário</label>
+        <input type="text" id="regUser" placeholder="seu_usuario" autocomplete="username" autocapitalize="none">
+      </div>
+      <div class="field">
+        <label for="regPass">Senha</label>
+        <div class="pass-wrap">
+          <input type="password" id="regPass" placeholder="••••••••" autocomplete="new-password">
+          <button type="button" class="btn-eye" id="btnShowRegPass" title="Mostrar senha">
+            <svg id="eyeIconReg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- WhatsApp opcional -->
+      <button type="button" class="wz-toggle" id="btnWzToggle">
+        <span class="wz-toggle-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:var(--ok)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M5.077 0C2.269 0 0 2.269 0 5.077c0 .898.235 1.741.645 2.477L.042 10l2.523-.643A5.057 5.057 0 0 0 5.077 10.154C7.885 10.154 10.154 7.885 10.154 5.077 10.154 2.269 7.885 0 5.077 0zm0 9.23c-.785 0-1.53-.211-2.17-.578L2.692 8.74l-.63.161.163-.624-.166-.214A4.144 4.144 0 0 1 .923 5.077c0-2.291 1.863-4.154 4.154-4.154S9.23 2.786 9.23 5.077 7.368 9.23 5.077 9.23z" transform="translate(7 7)"/></svg>
+          Receber alertas no WhatsApp
+        </span>
+        <span class="wz-pill" id="wzPill">Opcional</span>
+      </button>
+
+      <div class="wz-steps" id="wzSteps">
+        <div class="wz-step">
+          <div class="wz-num">1</div>
+          <p>Salve o número <code>+34 644 05 92 17</code> nos seus contatos (ex: "CallMeBot").</p>
+        </div>
+        <div class="wz-step">
+          <div class="wz-num">2</div>
+          <p>Envie a mensagem exata para esse número no WhatsApp:<br><code>I allow callmebot to send me messages</code></p>
+        </div>
+        <div class="wz-step">
+          <div class="wz-num">3</div>
+          <p>Você receberá sua API key. Exemplo: <code>1234567</code></p>
+        </div>
+        <div class="field" style="margin-top:12px;margin-bottom:12px">
+          <label for="regPhone">Seu número (com DDD e código do país)</label>
+          <input type="tel" id="regPhone" placeholder="5511999999999">
+          <div class="fhint">Apenas números, ex: 5511997590616</div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="regApiKey">API key recebida</label>
+          <input type="text" id="regApiKey" placeholder="1234567" inputmode="numeric">
+        </div>
+      </div>
+
+      <div id="regErr" style="font-size:12px;color:var(--no);margin-bottom:12px;display:none">Erro ao criar conta.</div>
+      <button type="button" class="btn btn-primary" id="btnRegister" style="width:100%;min-height:46px;font-size:15px">Criar conta</button>
+    </div>
   </div>
 </div>
 
@@ -445,7 +576,7 @@ body {
 <div class="mbg" id="logoutSheet" hidden>
   <div class="mbox">
     <div class="m-title">Sair da sessão</div>
-    <div class="m-sub" style="margin-bottom:20px">Você precisará fazer login novamente em outros dispositivos.</div>
+    <div class="m-sub" style="margin-bottom:20px">Você precisará fazer login novamente.</div>
     <div class="m-actions">
       <button type="button" class="btn btn-ghost" id="btnLogoutCancel">Cancelar</button>
       <button type="button" class="btn btn-primary" id="btnLogoutConfirm" style="background:var(--no);border-color:var(--no)">Sair</button>
@@ -455,8 +586,11 @@ body {
 
 <!-- Header -->
 <div class="hd">
-  <div class="hd-logo">V-Bucks <span>Monitor</span></div>
-  <button type="button" class="btn btn-primary" id="btnTrigger" title="Disparar" style="min-width:44px;padding:0 14px">
+  <div class="hd-logo">
+    <img src="data:image/png;base64,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" alt="V" width="22" height="22" style="object-fit:contain;flex-shrink:0">
+    V-Bucks <span>Monitor</span>
+  </div>
+  <button type="button" class="btn btn-primary" id="btnTrigger" title="Disparar" style="min-width:44px;padding:0 14px" hidden>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
   </button>
   <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar" style="min-width:44px;padding:0 12px">
@@ -477,24 +611,29 @@ body {
 <!-- Feedback -->
 <div class="fmsg" id="fmsg"></div>
 
-<!-- History -->
+<!-- Tabs -->
 <div class="view-tabs" style="margin-top:20px">
-  <button type="button" class="vt active" data-view="week">Semana</button>
-  <button type="button" class="vt" data-view="month">30 dias</button>
+  <button type="button" class="vt active" data-view="week">Disparos</button>
+  <button type="button" class="vt" data-view="missions">Missões</button>
 </div>
+
+<!-- Grid / Content area -->
 <div id="grid"></div>
-<div class="legend" style="margin-top:6px">
+
+<!-- Legend (only for Disparos) -->
+<div class="legend" id="legend" style="margin-top:6px">
   <div class="li"><img class="vb-coin" src="https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png" width="11" height="11" alt="V-Bucks">V-Bucks</div>
   <div class="li"><div class="ld no"></div>Sem V-Bucks</div>
   <div class="li"><div class="ld"></div>Sem registro</div>
 </div>
 
-<!-- Runs -->
-<div class="sh">Últimas execuções</div>
-<div class="run-list" id="runList">
-  <div class="sk" style="height:56px;border-radius:10px"></div>
-  <div class="sk" style="height:56px;border-radius:10px"></div>
-  <div class="sk" style="height:56px;border-radius:10px"></div>
+<!-- Runs (only for Disparos) -->
+<div id="runsSection">
+  <div class="sh">Últimas execuções</div>
+  <div class="run-list" id="runList">
+    <div class="sk" style="height:56px;border-radius:10px"></div>
+    <div class="sk" style="height:56px;border-radius:10px"></div>
+  </div>
 </div>
 
 <!-- Footer -->
@@ -504,11 +643,11 @@ body {
 </div>
 
 <script>
-// ── Credenciais fixas ─────────────────────────────
 const SB_URL  = 'https://otytppcftpqtdpmfxkic.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eXRwcGNmdHBxdGRwbWZ4a2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5ODEyMzAsImV4cCI6MjEwNjU1NzIzMH0.l7WiV2gIGAR02F4mRukKtzse1X3qfXSAp9j9QZFGZ5w';
 const REPO    = 'ejuanoli/Projetos_Python';
 const WF      = 'vbucks_alert.yml';
+const VB_IMG  = 'https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png';
 
 // ── Sessão ────────────────────────────────────────
 const SESSION_KEY = 'vbm_session';
@@ -519,20 +658,62 @@ function getSession() {
     return s;
   } catch { return null; }
 }
-function setSession(pat) {
+function setSession(data) {
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify({
-      pat, exp: Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 dias
+      ...data, exp: Date.now() + 30 * 24 * 60 * 60 * 1000
     }));
   } catch {}
 }
-function clearSession() {
-  try { localStorage.removeItem(SESSION_KEY); } catch {}
-}
+function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch {} }
 function getPat() { return getSession()?.pat || ''; }
 
-// ── Login ─────────────────────────────────────────
+// ── Login / Cadastro UI ───────────────────────────
 const loginScreen = document.getElementById('loginScreen');
+
+document.getElementById('tabEntrar').addEventListener('click', () => {
+  document.getElementById('tabEntrar').classList.add('active');
+  document.getElementById('tabCriar').classList.remove('active');
+  document.getElementById('formLogin').hidden = false;
+  document.getElementById('formCadastro').hidden = true;
+});
+document.getElementById('tabCriar').addEventListener('click', () => {
+  document.getElementById('tabCriar').classList.add('active');
+  document.getElementById('tabEntrar').classList.remove('active');
+  document.getElementById('formCadastro').hidden = false;
+  document.getElementById('formLogin').hidden = true;
+});
+
+// WhatsApp toggle
+let wzEnabled = false;
+document.getElementById('btnWzToggle').addEventListener('click', () => {
+  wzEnabled = !wzEnabled;
+  document.getElementById('wzSteps').classList.toggle('open', wzEnabled);
+  document.getElementById('wzPill').textContent = wzEnabled ? 'Ativado' : 'Opcional';
+  document.getElementById('wzPill').classList.toggle('on', wzEnabled);
+});
+
+// Mostrar senha - login
+document.getElementById('btnShowPass').addEventListener('click', () => {
+  const inp = document.getElementById('loginPass');
+  const ico = document.getElementById('eyeIcon');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  ico.innerHTML = show
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+});
+
+// Mostrar senha - cadastro
+document.getElementById('btnShowRegPass').addEventListener('click', () => {
+  const inp = document.getElementById('regPass');
+  const ico = document.getElementById('eyeIconReg');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  ico.innerHTML = show
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+});
 
 async function tryLogin() {
   const usuario = document.getElementById('loginUser').value.trim();
@@ -540,19 +721,19 @@ async function tryLogin() {
   const btn     = document.getElementById('btnLogin');
   const err     = document.getElementById('loginErr');
   if (!usuario || !senha) return;
-
   btn.disabled = true; btn.textContent = '⟳';
   err.style.display = 'none';
   try {
-    const r = await fetch(`${SB_URL}/rest/v1/rpc/get_pat`, {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/login_usuario`, {
       method: 'POST',
       headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_usuario: usuario, p_senha: senha })
+      body: JSON.stringify({ p_username: usuario, p_senha: senha })
     });
-    const pat = await r.json();
-    if (pat && typeof pat === 'string' && pat.startsWith('ghp_')) {
-      setSession(pat);
+    const data = await r.json();
+    if (data && data.username) {
+      setSession({ username: data.username, tem_whatsapp: !!data.tem_whatsapp, pat: data.pat || null });
       loginScreen.hidden = true;
+      document.getElementById('btnTrigger').hidden = !data.pat;
       loadData();
     } else {
       err.style.display = 'block';
@@ -567,9 +748,49 @@ async function tryLogin() {
   }
 }
 
+async function tryRegister() {
+  const username = document.getElementById('regUser').value.trim();
+  const senha    = document.getElementById('regPass').value;
+  const btn      = document.getElementById('btnRegister');
+  const err      = document.getElementById('regErr');
+  if (!username || !senha) { err.textContent = 'Preencha usuário e senha.'; err.style.display = 'block'; return; }
+  let telefone = null, apikey = null;
+  if (wzEnabled) {
+    telefone = document.getElementById('regPhone').value.replace(/\D/g, '');
+    apikey   = document.getElementById('regApiKey').value.trim();
+    if (!telefone || !apikey) { err.textContent = 'Preencha telefone e API key para WhatsApp.'; err.style.display = 'block'; return; }
+  }
+  btn.disabled = true; btn.textContent = '⟳';
+  err.style.display = 'none';
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/registrar_usuario`, {
+      method: 'POST',
+      headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_username: username, p_senha: senha, p_telefone: telefone, p_apikey: apikey })
+    });
+    const data = await r.json();
+    if (data && data.ok) {
+      // auto-login after register
+      document.getElementById('loginUser').value = username;
+      document.getElementById('loginPass').value = senha;
+      await tryLogin();
+    } else {
+      err.textContent = (data && data.erro) || 'Erro ao criar conta.';
+      err.style.display = 'block';
+    }
+  } catch(e) {
+    err.textContent = 'Erro de conexão. Tente novamente.';
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Criar conta';
+  }
+}
+
 document.getElementById('btnLogin').addEventListener('click', tryLogin);
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
 document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+document.getElementById('btnRegister').addEventListener('click', tryRegister);
+document.getElementById('regPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryRegister(); });
 
 // ── Refresh manual ───────────────────────────────
 document.getElementById('btnRefresh').addEventListener('click', async () => {
@@ -589,17 +810,12 @@ document.getElementById('btnLogoutConfirm').addEventListener('click', () => {
   loginScreen.hidden = false;
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
-});
-
-// ── Mostrar/ocultar senha ─────────────────────────
-document.getElementById('btnShowPass').addEventListener('click', () => {
-  const inp = document.getElementById('loginPass');
-  const ico = document.getElementById('eyeIcon');
-  const show = inp.type === 'password';
-  inp.type = show ? 'text' : 'password';
-  ico.innerHTML = show
-    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
-    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  document.getElementById('btnTrigger').hidden = true;
+  // Reset to login tab
+  document.getElementById('tabEntrar').classList.add('active');
+  document.getElementById('tabCriar').classList.remove('active');
+  document.getElementById('formLogin').hidden = false;
+  document.getElementById('formCadastro').hidden = true;
 });
 
 // ── Supabase ──────────────────────────────────────
@@ -657,74 +873,89 @@ function renderToday(row) {
 }
 
 // ── Grid ──────────────────────────────────────────
-const VB_IMG = 'https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png';
 let currentView = 'week';
 let cachedAlertas = [];
+let cachedRuns = [];
 
 function renderWeek(rows) {
   const byDate = Object.fromEntries(rows.map(r => [r.data, r]));
   const key0   = todayUTC();
   const DOWS   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const today  = new Date(); today.setUTCHours(12,0,0,0);
-  const dow    = today.getDay();
   let html = '';
-  for (let i = -dow; i <= 6 - dow; i++) {
-    const d = new Date(); d.setUTCDate(d.getUTCDate() + i); d.setUTCHours(12,0,0,0);
-    const k = d.toISOString().slice(0,10);
+  // Today + 6 previous days
+  for (let i = -6; i <= 0; i++) {
+    const d = new Date(today); d.setUTCDate(today.getUTCDate() + i);
+    const k   = d.toISOString().slice(0,10);
+    const dow = DOWS[d.getDay()];
     const num = d.getUTCDate();
     const row = byDate[k];
-    const isFuture = i > 0;
-    const isToday  = i === 0;
-    let cls = 'wdc' + (isToday ? ' td' : '');
-    if (isFuture) cls += ' future';
-    else if (row) cls += row.tipo === 'vbucks' ? ' ok' : ' no';
-    else cls += ' wait';
-    let inner = `<span class="wdc-dow">${DOWS[d.getDay()]}</span><span class="wdc-day">${num}</span>`;
-    if (!isFuture) {
-      if (row && row.tipo === 'vbucks') {
+    let cls   = 'wdc' + (k === key0 ? ' td' : '');
+    let inner = `<span class="wdc-dow">${dow}</span><span class="wdc-day">${num}</span>`;
+    if (row) {
+      if (row.tipo === 'vbucks') {
+        cls += ' ok';
         inner += `<img class="wdc-icon" src="${VB_IMG}" alt="V">`;
         if (row.quantidade) inner += `<span class="wdc-qty">${row.quantidade}</span>`;
-      } else if (row) {
-        inner += `<span class="wdc-dash">—</span>`;
       } else {
-        inner += `<span class="wdc-q">?</span>`;
+        cls += ' no';
+        inner += `<span class="wdc-dash">—</span>`;
       }
+    } else {
+      inner += `<span class="wdc-q">?</span>`;
     }
     html += `<div class="${cls}">${inner}</div>`;
   }
   document.getElementById('grid').innerHTML = `<div class="week-grid">${html}</div>`;
 }
 
-function renderMonth(rows) {
-  const byDate = Object.fromEntries(rows.map(r => [r.data, r]));
-  const key0   = todayUTC();
-  const days   = ['D','S','T','Q','Q','S','S'];
-  let html = days.map(d => `<div class="dh">${d}</div>`).join('');
-  const first = new Date(); first.setUTCDate(first.getUTCDate() - 29); first.setUTCHours(12,0,0,0);
-  for (let p = 0; p < first.getDay(); p++) html += '<div class="dc empty"></div>';
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(); d.setUTCDate(d.getUTCDate() - i); d.setUTCHours(12,0,0,0);
-    const k   = d.toISOString().slice(0,10);
-    const num = d.getUTCDate();
-    const lbl = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
-    const row = byDate[k];
-    let cls   = 'dc' + (k === key0 ? ' td' : '');
-    let tip   = `${lbl}: sem registro`;
-    let inner = num;
-    if (row) {
-      cls  += row.tipo === 'vbucks' ? ' ok' : ' no';
-      tip   = row.tipo === 'vbucks' ? `${lbl}: ${row.quantidade ?? '?'} V-Bucks` : `${lbl}: sem V-Bucks`;
-      if (row.tipo === 'vbucks') inner = `<img src="${VB_IMG}" alt="V" style="width:10px;height:10px;object-fit:contain">`;
-    }
-    html += `<div class="${cls}" data-tip="${tip}">${inner}</div>`;
+function renderMissions(rows) {
+  const today = todayUTC();
+  const container = document.getElementById('grid');
+  if (!rows.length) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Nenhum registro encontrado.</div>';
+    return;
   }
-  document.getElementById('grid').innerHTML = `<div class="grid30">${html}</div>`;
+  const sorted = [...rows].sort((a,b) => b.data.localeCompare(a.data)).slice(0, 30);
+  let html = '';
+  sorted.forEach(row => {
+    const d     = new Date(row.data + 'T12:00:00Z');
+    const lbl   = d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+    const isToday = row.data === today;
+    const hora  = row.enviado_em
+      ? new Date(row.enviado_em).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' })
+      : '—';
+    const statusCls = row.tipo === 'vbucks' ? 'ok' : 'no';
+    const statusLbl = row.tipo === 'vbucks' ? `${row.quantidade ?? '?'} V-Bucks` : 'Sem V-Bucks';
+    const openAttr  = isToday ? 'open' : '';
+    html += `<details class="mission-day ${statusCls}" ${openAttr}>
+      <summary class="mission-sum">
+        <span class="mission-dow">${lbl}</span>
+        <span class="mission-badge ${statusCls}">${statusLbl}</span>
+      </summary>
+      <div class="mission-body">
+        ${row.tipo === 'vbucks'
+          ? `<div class="mission-detail"><img src="${VB_IMG}" width="24" height="24" alt="V"><span class="mission-qty">${row.quantidade ?? '?'} V-Bucks disponíveis</span></div>`
+          : `<div style="color:var(--no);font-size:14px;padding-top:10px">Sem V-Bucks hoje</div>`
+        }
+        <div class="mission-time">Verificado às ${hora} BRT</div>
+      </div>
+    </details>`;
+  });
+  container.innerHTML = `<div class="mission-list">${html}</div>`;
 }
 
 function renderGrid(rows) {
   cachedAlertas = rows;
-  if (currentView === 'week') renderWeek(rows);
-  else renderMonth(rows);
+  if (currentView === 'week') {
+    renderWeek(rows);
+    document.getElementById('legend').hidden = false;
+    document.getElementById('runsSection').hidden = false;
+  } else {
+    renderMissions(rows);
+    document.getElementById('legend').hidden = true;
+    document.getElementById('runsSection').hidden = true;
+  }
 }
 
 document.querySelectorAll('.vt').forEach(btn => {
@@ -732,20 +963,22 @@ document.querySelectorAll('.vt').forEach(btn => {
     currentView = btn.dataset.view;
     document.querySelectorAll('.vt').forEach(b => b.classList.toggle('active', b === btn));
     renderGrid(cachedAlertas);
+    if (currentView === 'week' && cachedRuns.length) renderRuns(cachedRuns, cachedAlertas);
   });
 });
 
 // ── Runs ──────────────────────────────────────────
 const RUN_LABELS = {
-  success:   ['ok',  '✓', 'Sucesso'],
-  failure:   ['no',  '✗', 'Falhou'],
-  in_progress:['run','⟳', 'Rodando'],
-  cancelled: ['skip','—', 'Cancelado'],
-  skipped:   ['skip','—', 'Ignorado'],
+  success:      ['ok',  '✓', 'Sucesso'],
+  failure:      ['no',  '✗', 'Falhou'],
+  in_progress:  ['run', '⟳', 'Rodando'],
+  cancelled:    ['skip','—', 'Cancelado'],
+  skipped:      ['skip','—', 'Ignorado'],
 };
 const EVENT_PT = { schedule: 'Agendado', workflow_dispatch: 'Manual', push: 'Push' };
 
 function renderRuns(runs, alertas) {
+  cachedRuns = runs;
   const list = document.getElementById('runList');
   if (!runs.length) { list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Nenhuma execução encontrada.</div>'; return; }
   const byDate = Object.fromEntries((alertas || []).map(r => [r.data, r]));
@@ -769,14 +1002,12 @@ function renderRuns(runs, alertas) {
         const runStart  = new Date(run.created_at);
         const alertSent = new Date(alerta.enviado_em);
         if (runStart < alertSent) {
-          // este run foi o que enviou o alerta
           if (alerta.tipo === 'vbucks') {
             alertaTag = `<div style="font-size:10px;color:var(--ok);display:flex;align-items:center;gap:3px;margin-top:2px"><img src="${VB_IMG}" width="10" height="10" alt="V">${alerta.quantidade ?? '?'} V-Bucks enviado</div>`;
           } else {
             alertaTag = `<div style="font-size:10px;color:var(--muted);margin-top:2px">Sem V-Bucks — alerta enviado</div>`;
           }
         } else {
-          // run iniciou depois que o alerta já foi enviado por outro run
           const hora = alertSent.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
           alertaTag = `<div style="font-size:10px;color:var(--muted);margin-top:2px">Alerta já enviado às ${hora} BRT</div>`;
         }
@@ -793,22 +1024,24 @@ function renderRuns(runs, alertas) {
       <div class="run-badge ${cls}">${label}</div>
     </a>`;
   };
+
   const visible = runs.slice(0, MAX_VISIBLE);
   const rest    = runs.slice(MAX_VISIBLE);
   let html = visible.map(makeCard).join('');
   if (rest.length) {
-    html += `<button type="button" class="btn-more" id="btnMoreRuns">Ver mais ${rest.length} execuç${rest.length === 1 ? 'ão' : 'ões'} ▾</button>`;
+    const n = rest.length;
+    html += `<button type="button" class="btn-more" id="btnMoreRuns" data-open="0">Ver mais ${n} execuç${n===1?'ão':'ões'} ▾</button>`;
+    html += rest.map(r => `<div class="extra-run" hidden>${makeCard(r)}</div>`).join('');
   }
   list.innerHTML = html;
-  if (rest.length) {
-    document.getElementById('btnMoreRuns').addEventListener('click', function() {
-      this.replaceWith(...rest.map(r => {
-        const el = document.createElement('div');
-        el.innerHTML = makeCard(r);
-        return el.firstElementChild;
-      }));
-    });
-  }
+  document.getElementById('btnMoreRuns')?.addEventListener('click', function() {
+    const open = this.dataset.open === '1';
+    list.querySelectorAll('.extra-run').forEach(el => { el.hidden = open; });
+    this.dataset.open = open ? '0' : '1';
+    this.textContent  = open
+      ? `Ver mais ${rest.length} execuç${rest.length===1?'ão':'ões'} ▾`
+      : `Ocultar ▴`;
+  });
 }
 
 // ── Feedback ──────────────────────────────────────
@@ -822,9 +1055,9 @@ function showMsg(txt, ok) {
 // ── Trigger ───────────────────────────────────────
 document.getElementById('btnTrigger').addEventListener('click', async () => {
   const pat = getPat();
-  if (!pat) { openModal(); return; }
+  if (!pat) return;
   const btn = document.getElementById('btnTrigger');
-  btn.disabled = true; btn.textContent = '⟳';
+  btn.disabled = true;
   try {
     const r = await fetch(
       `https://api.github.com/repos/${REPO}/actions/workflows/${WF}/dispatches`,
@@ -839,7 +1072,7 @@ document.getElementById('btnTrigger').addEventListener('click', async () => {
       throw new Error(`GitHub ${r.status}`);
     }
   } catch(e) { showMsg(e.message, false); }
-  finally { btn.disabled = false; btn.textContent = '▶ Disparar'; }
+  finally { btn.disabled = false; }
 });
 
 // ── Load ──────────────────────────────────────────
@@ -848,7 +1081,8 @@ async function loadData() {
     const [alertas, runs] = await Promise.all([fetchAlertas(), fetchRuns()]);
     renderToday(alertas.find(r => r.data === todayUTC()) || null);
     renderGrid(alertas);
-    renderRuns(runs, alertas);
+    if (currentView === 'week') renderRuns(runs, alertas);
+    else cachedRuns = runs;
     document.getElementById('lastUp').textContent =
       'Atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
   } catch(e) {
@@ -857,8 +1091,10 @@ async function loadData() {
 }
 
 // ── Boot ──────────────────────────────────────────
-if (getSession()) {
+const session = getSession();
+if (session) {
   loginScreen.hidden = true;
+  document.getElementById('btnTrigger').hidden = !session.pat;
   loadData();
 }
 setInterval(() => { if (getSession()) loadData(); }, 60_000);

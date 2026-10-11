@@ -2,12 +2,11 @@
 Script standalone para verificar V-Bucks do Salve o Mundo (Fortnite).
 Roda em loop até encontrar a atualização diária ou atingir o timeout.
 Usa Supabase para garantir que o alerta seja enviado apenas uma vez por dia.
+Envia para todos os usuários cadastrados com WhatsApp configurado.
 
 Variáveis de ambiente necessárias:
-  WHATSAPP_TELEFONE  ex.: 5511997590616
-  WHATSAPP_APIKEY    chave fornecida pelo CallMeBot
-  SUPABASE_URL       ex.: https://xyzxyz.supabase.co
-  SUPABASE_KEY       anon/service_role key do projeto
+  SUPABASE_URL              ex.: https://xyzxyz.supabase.co
+  SUPABASE_SERVICE_ROLE_KEY service_role key do projeto
 """
 import json
 import logging
@@ -38,7 +37,6 @@ MISSOES_PT = {
     "repair the shelter": "Consertar o Abrigo",
 }
 
-# Timeout: 11 minutos a partir do início (cobre 20:59 até 21:10 BRT)
 TIMEOUT_SEGUNDOS = 11 * 60
 INTERVALO_RETRY = 30
 
@@ -58,7 +56,6 @@ def _supabase_headers() -> dict:
 
 
 def alerta_ja_enviado(data: str) -> bool:
-    """Retorna True se já existe registro para essa data no Supabase."""
     url = os.environ.get("SUPABASE_URL", "").rstrip("/")
     if not url:
         logging.warning("SUPABASE_URL não definida; checagem de duplicata ignorada.")
@@ -75,7 +72,6 @@ def alerta_ja_enviado(data: str) -> bool:
 
 
 def registrar_envio(data: str, tipo: str, quantidade: int | None = None) -> None:
-    """Insere ou atualiza o registro de envio do dia no Supabase."""
     url = os.environ.get("SUPABASE_URL", "").rstrip("/")
     if not url:
         return
@@ -84,7 +80,6 @@ def registrar_envio(data: str, tipo: str, quantidade: int | None = None) -> None
     if quantidade is not None:
         payload["quantidade"] = quantidade
     headers = _supabase_headers()
-    # upsert: se já existir o mesmo 'data', atualiza
     headers["Prefer"] = "resolution=merge-duplicates,return=minimal"
     dados = json.dumps(payload).encode()
     req = urllib.request.Request(endpoint, data=dados, headers=headers, method="POST")
@@ -94,6 +89,26 @@ def registrar_envio(data: str, tipo: str, quantidade: int | None = None) -> None
         logging.info("Supabase: registro salvo (%s | %s).", data, tipo)
     except Exception as erro:
         logging.warning("Supabase: falha ao registrar envio (%r).", erro)
+
+
+def buscar_usuarios_whatsapp() -> list[dict]:
+    """Retorna lista de {telefone, whatsapp_apikey} de todos os usuários com WhatsApp."""
+    url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    if not url:
+        return []
+    endpoint = (
+        f"{url}/rest/v1/usuarios"
+        "?select=telefone,whatsapp_apikey"
+        "&telefone=not.is.null"
+        "&whatsapp_apikey=not.is.null"
+    )
+    req = urllib.request.Request(endpoint, headers=_supabase_headers())
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode())
+    except Exception as erro:
+        logging.warning("Supabase: falha ao buscar usuários (%r).", erro)
+        return []
 
 
 # ---------------------------------------------------------------------------
@@ -142,17 +157,33 @@ def montar_mensagem(alertas: list) -> str:
     return "\n".join(linhas)
 
 
-def enviar_whatsapp(texto: str) -> None:
-    telefone = "".join(c for c in os.environ.get("WHATSAPP_TELEFONE", "") if c.isdigit())
-    apikey = os.environ.get("WHATSAPP_APIKEY", "")
-    if not telefone or not apikey:
-        raise RuntimeError("Defina WHATSAPP_TELEFONE e WHATSAPP_APIKEY.")
-    consulta = urllib.parse.urlencode({"phone": "+" + telefone, "text": texto, "apikey": apikey})
+def enviar_whatsapp(texto: str, telefone: str, apikey: str) -> None:
+    telefone_num = "".join(c for c in telefone if c.isdigit())
+    if not telefone_num or not apikey:
+        raise RuntimeError("Telefone ou API key inválidos.")
+    consulta = urllib.parse.urlencode({"phone": "+" + telefone_num, "text": texto, "apikey": apikey})
     with urllib.request.urlopen(f"{URL_CALLMEBOT}?{consulta}", timeout=60) as resp:
         corpo = resp.read().decode("utf-8", errors="replace")
         status = resp.status
     if status != 200 or "error" in corpo.lower():
         raise RuntimeError(f"CallMeBot recusou o envio ({status}): {corpo[:200]}")
+
+
+def enviar_para_todos(texto: str) -> int:
+    """Envia mensagem a todos os usuários com WhatsApp. Retorna quantidade de envios bem-sucedidos."""
+    usuarios = buscar_usuarios_whatsapp()
+    if not usuarios:
+        logging.warning("Nenhum usuário com WhatsApp cadastrado.")
+        return 0
+    enviados = 0
+    for u in usuarios:
+        try:
+            enviar_whatsapp(texto, u["telefone"], u["whatsapp_apikey"])
+            logging.info("WhatsApp enviado para %s****.", u["telefone"][:4])
+            enviados += 1
+        except Exception as erro:
+            logging.warning("Falha ao enviar para %s****: %r", u["telefone"][:4], erro)
+    return enviados
 
 
 # ---------------------------------------------------------------------------
@@ -167,7 +198,6 @@ def main() -> None:
         tentativa += 1
         decorrido = time.monotonic() - inicio
 
-        # Recalcula "hoje" a cada iteração para cruzar a meia-noite UTC corretamente
         hoje = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         hoje_fmt = datetime.now(timezone.utc).strftime("%d/%m/%Y")
 
@@ -176,11 +206,12 @@ def main() -> None:
             if alerta_ja_enviado(hoje):
                 logging.info("Alerta de hoje já foi enviado anteriormente; encerrando sem reenvio.")
                 sys.exit(0)
-            try:
-                enviar_whatsapp(f"Hoje ({hoje_fmt}) não há V-Bucks disponíveis no Salve o Mundo.")
+            msg = f"Hoje ({hoje_fmt}) não há V-Bucks disponíveis no Salve o Mundo."
+            enviados = enviar_para_todos(msg)
+            if enviados > 0:
                 registrar_envio(hoje, "sem_vbucks")
-            except Exception as erro:
-                logging.error("Falha ao enviar aviso de ausência: %r", erro)
+            else:
+                logging.error("Nenhum envio bem-sucedido.")
             sys.exit(0)
 
         try:
@@ -199,13 +230,16 @@ def main() -> None:
                 alertas = alertas_de_vbucks(snapshot)
                 if alertas:
                     total = sum(int(a.get("quantity") or 0) for a in alertas)
-                    enviar_whatsapp(montar_mensagem(alertas))
-                    registrar_envio(hoje, "vbucks", total)
-                    logging.info("Sucesso: %d alerta(s) enviado(s) via WhatsApp.", len(alertas))
+                    enviados = enviar_para_todos(montar_mensagem(alertas))
+                    if enviados > 0:
+                        registrar_envio(hoje, "vbucks", total)
+                    logging.info("Sucesso: %d V-Bucks, enviado para %d usuário(s).", total, enviados)
                 else:
-                    enviar_whatsapp(f"Hoje ({hoje_fmt}) não há V-Bucks disponíveis no Salve o Mundo.")
-                    registrar_envio(hoje, "sem_vbucks")
-                    logging.info("Sem V-Bucks hoje; aviso enviado.")
+                    msg = f"Hoje ({hoje_fmt}) não há V-Bucks disponíveis no Salve o Mundo."
+                    enviados = enviar_para_todos(msg)
+                    if enviados > 0:
+                        registrar_envio(hoje, "sem_vbucks")
+                    logging.info("Sem V-Bucks hoje; enviado para %d usuário(s).", enviados)
                 sys.exit(0)
 
         except Exception as erro:
