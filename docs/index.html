@@ -551,6 +551,25 @@ body {
   font-family: 'DM Sans', sans-serif;
 }
 .wa-copy.done { background: var(--ok-dim); color: var(--ok); }
+.wa-status {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px;
+  background: var(--ok-dim); border-radius: 14px;
+}
+.wa-status[hidden] { display: none; }
+.wa-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); flex-shrink: 0; box-shadow: 0 0 0 4px var(--ok-dim); }
+.wa-status-t { font-size: 13px; font-weight: 600; color: var(--ok); }
+.wa-status-s { font-size: 12px; color: var(--muted); margin-top: 1px; overflow-wrap: anywhere; }
+.wa-eye { background: none; border: none; color: var(--muted); cursor: pointer; padding: 6px; display: flex; }
+.wa-extra { display: flex; gap: 8px; margin-top: 10px; }
+.wa-extra[hidden] { display: none; }
+.wa-act {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
+  background: var(--surf2); border: 1px solid var(--border); border-radius: 12px; cursor: pointer;
+  color: var(--fg); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+}
+.wa-act:disabled { opacity: .5; }
+.wa-act-danger { color: var(--no); }
+.wa-act-danger.confirm { background: var(--no); border-color: var(--no); color: #fff; }
 .wa-remove { width: 100%; margin-top: 8px; background: none; border: none; color: var(--no); font-size: 12px; cursor: pointer; padding: 10px 0; }
 #btnTrigger { border-radius: 8px; }
 #btnTrigger svg { display: block; }
@@ -711,8 +730,16 @@ body {
     <button type="button" class="pf-x" id="btnWaCancel" aria-label="Fechar">&times;</button>
     <div class="wa-head">
       <img id="wa-modal-icon" alt="WhatsApp" width="52" height="52" style="object-fit:contain">
-      <div class="wa-title">WhatsApp</div>
+      <div class="wa-title" id="waTitle">WhatsApp</div>
       <div class="m-sub" id="waSubtitle" style="margin:0">Configure para receber alertas diários.</div>
+    </div>
+
+    <div class="wa-status" id="waStatus" hidden>
+      <span class="wa-dot"></span>
+      <div style="min-width:0">
+        <div class="wa-status-t">Alertas ativos</div>
+        <div class="wa-status-s" id="waStatusNum"></div>
+      </div>
     </div>
 
     <div id="waSetupSteps" style="display:none">
@@ -741,14 +768,27 @@ body {
       </label>
       <label class="pf-line">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.9 12.1L20 3"/><path d="M17 6l3 3"/><path d="M14 9l2 2"/></svg>
-        <input type="text" id="waApiKey" placeholder="API key do CallMeBot" inputmode="numeric" autocomplete="off" aria-label="API key do CallMeBot">
+        <input type="password" id="waApiKey" placeholder="API key do CallMeBot" inputmode="numeric" autocomplete="off" aria-label="API key do CallMeBot">
+        <button type="button" class="wa-eye" id="btnWaEye" aria-label="Mostrar API key">
+          <svg id="waEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
       </label>
     </div>
     <div class="fhint" id="waPhoneHint" style="margin:8px 2px 0">Pode digitar com DDD, +, espaços ou traços. Ajustamos para você.</div>
 
     <div id="waErr" style="font-size:12px;color:var(--no);margin-top:10px;display:none"></div>
     <button type="button" class="btn btn-primary" id="btnWaSave" style="width:100%;min-height:48px;font-size:15px;margin-top:16px">Salvar</button>
-    <button type="button" id="btnWaRemove" class="wa-remove" style="display:none">Remover WhatsApp</button>
+
+    <div class="wa-extra" id="waExtra" hidden>
+      <button type="button" class="wa-act" id="btnWaTest">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Enviar teste
+      </button>
+      <button type="button" class="wa-act wa-act-danger" id="btnWaRemove">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        <span id="waRemoveLbl">Remover</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1355,18 +1395,40 @@ bindPhoneField('waPhone', 'waPhoneHint');
 // ── WhatsApp modal ────────────────────────────────
 const waSheet = document.getElementById('waSheet');
 
+let waInitial = { phone: '', key: '' };
+function waDirty() {
+  const hasWa = getSession()?.tem_whatsapp;
+  const phone = normalizePhone(document.getElementById('waPhone').value);
+  const key = document.getElementById('waApiKey').value.trim();
+  document.getElementById('btnWaSave').disabled = !!hasWa && phone === waInitial.phone && key === waInitial.key;
+}
+function resetWaRemove() {
+  const b = document.getElementById('btnWaRemove');
+  b.classList.remove('confirm');
+  document.getElementById('waRemoveLbl').textContent = 'Remover';
+}
 function openWaSheet() {
   profileSheet.hidden = true;
   const s = getSession();
-  const hasWa = s?.tem_whatsapp;
+  const hasWa = !!s?.tem_whatsapp;
+  document.getElementById('waTitle').textContent = hasWa ? 'Editar WhatsApp' : 'WhatsApp';
   document.getElementById('waSubtitle').textContent = hasWa
-    ? 'Edite seu número ou API key do CallMeBot.'
+    ? 'Altere o número ou a API key do CallMeBot.'
     : 'Configure para receber alertas diários.';
   document.getElementById('waSetupSteps').style.display = hasWa ? 'none' : 'block';
-  document.getElementById('btnWaRemove').style.display = hasWa ? 'block' : 'none';
+  document.getElementById('waExtra').hidden = !hasWa;
+  document.getElementById('waStatus').hidden = !hasWa;
+  document.getElementById('btnWaSave').textContent = hasWa ? 'Salvar alterações' : 'Salvar';
+  const eyeInput = document.getElementById('waApiKey');
+  eyeInput.type = 'password';
+  resetWaRemove();
   const fillWa = pr => {
     document.getElementById('waPhone').value = pr.telefone ? formatPhone(pr.telefone) : '';
     document.getElementById('waApiKey').value = pr.apikey || '';
+    document.getElementById('waStatusNum').textContent = pr.telefone ? formatPhone(pr.telefone) : '';
+    waInitial = { phone: pr.telefone || '', key: pr.apikey || '' };
+    document.getElementById('waPhone').dispatchEvent(new Event('input'));
+    waDirty();
   };
   const cached = getProfile();
   fillWa(hasWa ? cached : {});
@@ -1378,10 +1440,35 @@ function openWaSheet() {
       fillWa(np); refreshUserUI();
     }).catch(() => {});
   }
-  document.getElementById('waPhone').dispatchEvent(new Event('input'));
   document.getElementById('waErr').style.display = 'none';
   waSheet.hidden = false;
 }
+['waPhone', 'waApiKey'].forEach(id => document.getElementById(id).addEventListener('input', waDirty));
+document.getElementById('btnWaEye').addEventListener('click', () => {
+  const inp = document.getElementById('waApiKey');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  document.getElementById('waEyeIcon').innerHTML = show
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+});
+document.getElementById('btnWaTest').addEventListener('click', async () => {
+  const err = document.getElementById('waErr');
+  const telefone = normalizePhone(document.getElementById('waPhone').value);
+  const apikey = document.getElementById('waApiKey').value.trim();
+  err.style.display = 'block';
+  if (!telefone || !apikey || !phoneValid(telefone)) { err.style.color = 'var(--no)'; err.textContent = 'Preencha um número e uma API key válidos para testar.'; return; }
+  const btn = document.getElementById('btnWaTest');
+  btn.disabled = true;
+  try {
+    const q = new URLSearchParams({ phone: '+' + telefone, text: 'Teste do V-Bucks Monitor: seus alertas estão funcionando.', apikey });
+    await fetch('https://api.callmebot.com/whatsapp.php?' + q, { mode: 'no-cors' });
+    err.style.color = 'var(--ok)'; err.textContent = 'Teste enviado. Confira seu WhatsApp em alguns segundos.';
+  } catch {
+    err.style.color = 'var(--no)'; err.textContent = 'Não foi possível enviar o teste.';
+  }
+  btn.disabled = false;
+});
 function setWaCache(telefone, apikey) {
   const s = getSession();
   if (!s) return;
@@ -1408,7 +1495,7 @@ document.getElementById('btnWaSave').addEventListener('click', async () => {
   if (!phoneValid(telefone)) { err.textContent = 'Número inválido. Use DDD + número, ex: (11) 99999-9999.'; err.style.display = 'block'; return; }
   const btn = document.getElementById('btnWaSave');
   btn.disabled = true; btn.textContent = '⟳';
-  err.style.display = 'none';
+  err.style.display = 'none'; err.style.color = 'var(--no)';
   try {
     const r = await fetch(`${SB_URL}/rest/v1/rpc/atualizar_whatsapp`, {
       method: 'POST',
@@ -1437,6 +1524,13 @@ document.getElementById('btnWaSave').addEventListener('click', async () => {
 document.getElementById('btnWaRemove').addEventListener('click', async () => {
   const s = getSession();
   if (!s) return;
+  const rb = document.getElementById('btnWaRemove');
+  if (!rb.classList.contains('confirm')) {
+    rb.classList.add('confirm');
+    document.getElementById('waRemoveLbl').textContent = 'Toque para confirmar';
+    setTimeout(resetWaRemove, 4000);
+    return;
+  }
   try {
     await fetch(`${SB_URL}/rest/v1/rpc/atualizar_whatsapp`, {
       method: 'POST',
