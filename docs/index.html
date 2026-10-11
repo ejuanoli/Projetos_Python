@@ -346,6 +346,30 @@ body {
   animation: beat 2.2s ease-in-out infinite;
 }
 @keyframes beat { 0%,100%{opacity:1} 50%{opacity:.2} }
+@keyframes spin  { to { transform: rotate(360deg); } }
+.spinning svg { animation: spin .7s linear infinite; display: block; }
+
+/* ── password toggle ─────────────── */
+.pass-wrap { position: relative; }
+.pass-wrap input { padding-right: 42px; }
+.btn-eye {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 40px;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); display: flex; align-items: center; justify-content: center;
+  border-radius: 0 8px 8px 0;
+}
+.btn-eye:hover { color: var(--fg); }
+
+/* ── more-runs ───────────────────── */
+.btn-more {
+  width: 100%; margin-top: 6px; min-height: 36px;
+  font-size: 12px; color: var(--muted);
+  background: var(--surf2); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-weight: 500;
+  transition: background .12s;
+}
+.btn-more:hover { background: var(--border); }
 
 /* ── modal (só PAT) ──────────────── */
 .mbg {
@@ -405,18 +429,39 @@ body {
     </div>
     <div class="field">
       <label>Senha</label>
-      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+      <div class="pass-wrap">
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+        <button type="button" class="btn-eye" id="btnShowPass" title="Mostrar senha">
+          <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
     <div id="loginErr" style="font-size:12px;color:var(--no);margin-bottom:12px;display:none">Usuário ou senha incorretos.</div>
     <button type="button" class="btn btn-primary" id="btnLogin" style="width:100%;min-height:46px;font-size:15px">Entrar</button>
   </div>
 </div>
 
+<!-- Modal de confirmação de logout -->
+<div class="mbg" id="logoutSheet" hidden>
+  <div class="mbox">
+    <div class="m-title">Sair da sessão</div>
+    <div class="m-sub" style="margin-bottom:20px">Você precisará fazer login novamente em outros dispositivos.</div>
+    <div class="m-actions">
+      <button type="button" class="btn btn-ghost" id="btnLogoutCancel">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="btnLogoutConfirm" style="background:var(--no);border-color:var(--no)">Sair</button>
+    </div>
+  </div>
+</div>
+
 <!-- Header -->
 <div class="hd">
   <div class="hd-logo">V-Bucks <span>Monitor</span></div>
-  <button type="button" class="btn btn-primary" id="btnTrigger">▶ <span class="hd-label">Disparar</span></button>
-  <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar" style="min-width:40px;padding:0 10px">↻</button>
+  <button type="button" class="btn btn-primary" id="btnTrigger" title="Disparar" style="min-width:44px;padding:0 14px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+  </button>
+  <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar" style="min-width:44px;padding:0 12px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+  </button>
   <button type="button" class="btn btn-ghost" id="btnCfg" title="Sair" style="min-width:40px;padding:0 10px">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
   </button>
@@ -529,19 +574,32 @@ document.getElementById('loginUser').addEventListener('keydown', e => { if (e.ke
 // ── Refresh manual ───────────────────────────────
 document.getElementById('btnRefresh').addEventListener('click', async () => {
   const btn = document.getElementById('btnRefresh');
-  btn.disabled = true; btn.textContent = '⟳';
+  btn.disabled = true; btn.classList.add('spinning');
   await loadData();
-  btn.disabled = false; btn.textContent = '↻';
+  btn.disabled = false; btn.classList.remove('spinning');
 });
 
-// ── Logout (botão ⚙) ─────────────────────────────
-document.getElementById('btnCfg').addEventListener('click', () => {
-  if (confirm('Sair da sessão?')) {
-    clearSession();
-    loginScreen.hidden = false;
-    document.getElementById('loginUser').value = '';
-    document.getElementById('loginPass').value = '';
-  }
+// ── Logout sheet ──────────────────────────────────
+const logoutSheet = document.getElementById('logoutSheet');
+document.getElementById('btnCfg').addEventListener('click', () => { logoutSheet.hidden = false; });
+document.getElementById('btnLogoutCancel').addEventListener('click', () => { logoutSheet.hidden = true; });
+document.getElementById('btnLogoutConfirm').addEventListener('click', () => {
+  logoutSheet.hidden = true;
+  clearSession();
+  loginScreen.hidden = false;
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+});
+
+// ── Mostrar/ocultar senha ─────────────────────────
+document.getElementById('btnShowPass').addEventListener('click', () => {
+  const inp = document.getElementById('loginPass');
+  const ico = document.getElementById('eyeIcon');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  ico.innerHTML = show
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
 });
 
 // ── Supabase ──────────────────────────────────────
@@ -691,7 +749,8 @@ function renderRuns(runs, alertas) {
   const list = document.getElementById('runList');
   if (!runs.length) { list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Nenhuma execução encontrada.</div>'; return; }
   const byDate = Object.fromEntries((alertas || []).map(r => [r.data, r]));
-  list.innerHTML = runs.map(run => {
+  const MAX_VISIBLE = 2;
+  const makeCard = (run) => {
     const conc   = run.conclusion || (run.status === 'in_progress' ? 'in_progress' : 'skipped');
     const [cls, icon, label] = RUN_LABELS[conc] || ['skip','?', conc];
     const runDate = run.created_at.slice(0,10);
@@ -733,7 +792,23 @@ function renderRuns(runs, alertas) {
       </div>
       <div class="run-badge ${cls}">${label}</div>
     </a>`;
-  }).join('');
+  };
+  const visible = runs.slice(0, MAX_VISIBLE);
+  const rest    = runs.slice(MAX_VISIBLE);
+  let html = visible.map(makeCard).join('');
+  if (rest.length) {
+    html += `<button type="button" class="btn-more" id="btnMoreRuns">Ver mais ${rest.length} execuç${rest.length === 1 ? 'ão' : 'ões'} ▾</button>`;
+  }
+  list.innerHTML = html;
+  if (rest.length) {
+    document.getElementById('btnMoreRuns').addEventListener('click', function() {
+      this.replaceWith(...rest.map(r => {
+        const el = document.createElement('div');
+        el.innerHTML = makeCard(r);
+        return el.firstElementChild;
+      }));
+    });
+  }
 }
 
 // ── Feedback ──────────────────────────────────────
