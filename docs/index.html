@@ -172,6 +172,13 @@ body {
   border-radius: 8px; color: var(--fg);
   font-family: 'DM Sans', sans-serif; font-size: 14px;
 }
+.m-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; font-size: 12px; color: var(--muted); line-height: 1.3; margin-top: 2px; }
+.m-meta > span + span::before { content: '·'; margin: 0 6px; }
+.btn-past {
+  width: 100%; margin-top: 12px; min-height: 40px; border-radius: 10px; cursor: pointer;
+  background: var(--surf2); border: 1px solid var(--border); color: var(--muted);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+}
 .pw { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
 
 .btn {
@@ -1462,7 +1469,9 @@ function renderMissions(rows) {
   }
   const sorted = [...rows].sort((a,b) => b.data.localeCompare(a.data)).slice(0, 30);
   let html = '';
-  sorted.forEach(row => {
+  let pastHtml = '';
+  let pastCount = 0;
+  sorted.forEach((row, idx) => {
     const d     = new Date(row.data + 'T12:00:00Z');
     const lbl   = d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
     const isToday = row.data === today;
@@ -1481,7 +1490,7 @@ function renderMissions(rows) {
             <div style="min-width:0">
               <div style="font-size:13px;font-weight:600;color:var(--ok);display:flex;align-items:center;gap:5px;white-space:nowrap"><img src="${VB_IMG}" width="14" height="14" alt="" style="object-fit:contain">${m.quantidade} V-Bucks</div>
               <div style="font-size:12px;color:var(--fg)">${m.tipo || 'Missão'}</div>
-              ${m.zona ? `<div style="font-size:11px;color:var(--muted)">${m.zona}${m.poder ? ` · <span class="pw">${BOLT_SVG}${m.poder}</span>` : ''}${m.biome ? ' · ' + m.biome : ''}</div>` : ''}
+              ${m.zona ? `<div class="m-meta"><span>${m.zona}</span>${m.poder ? `<span class="pw">${BOLT_SVG}${m.poder}</span>` : ''}${m.biome ? `<span>${m.biome}</span>` : ''}</div>` : ''}
             </div>
           </div>`).join('').replace(/border-bottom[^;]+;([^}]*})?(?=<\/div>\s*$)/, '');
       } else {
@@ -1490,7 +1499,7 @@ function renderMissions(rows) {
     } else {
       missionBody = `<div style="color:var(--no);font-size:13px;padding-top:8px">Sem V-Bucks hoje</div>`;
     }
-    html += `<details class="mission-day ${statusCls}" ${openAttr}>
+    const card = `<details class="mission-day ${statusCls}" ${openAttr}>
       <summary class="mission-sum">
         <span class="mission-dow">${lbl}</span>
         <span class="mission-badge ${statusCls}">${statusLbl}</span>
@@ -1500,9 +1509,22 @@ function renderMissions(rows) {
         <div class="mission-time">Verificado às ${hora} BRT</div>
       </div>
     </details>`;
+    if (idx === 0) html += card; else { pastHtml += card; pastCount++; }
   });
-  container.innerHTML = `<div class="mission-list">${html}</div>`;
+  let past = '';
+  if (pastCount) {
+    past = `<button type="button" class="btn-past" id="btnPast">${pastOpen ? 'Ocultar dias anteriores ▴' : `Ver dias anteriores (${pastCount}) ▾`}</button>
+      <div class="mission-list" id="pastList" style="margin-top:10px" ${pastOpen ? '' : 'hidden'}>${pastHtml}</div>`;
+  }
+  container.innerHTML = `<div class="mission-list">${html}</div>${past}`;
+  const bp = document.getElementById('btnPast');
+  if (bp) bp.addEventListener('click', () => {
+    pastOpen = !pastOpen;
+    document.getElementById('pastList').hidden = !pastOpen;
+    bp.textContent = pastOpen ? 'Ocultar dias anteriores ▴' : `Ver dias anteriores (${pastCount}) ▾`;
+  });
 }
+let pastOpen = false;
 
 function renderGrid(rows) {
   cachedAlertas = rows;
