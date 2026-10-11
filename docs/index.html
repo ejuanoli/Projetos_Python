@@ -320,20 +320,23 @@ body {
 @keyframes sk { 0%,100%{opacity:1} 50%{opacity:.3} }
 </style>
 
-<!-- Modal só do PAT -->
-<div class="mbg" id="modal" hidden>
-  <div class="mbox">
-    <div class="m-title">GitHub PAT</div>
-    <div class="m-sub">Necessário para o botão Disparar. Escopo: <strong>workflow</strong>. Salvo só neste navegador.</div>
+<!-- Tela de login (cobre tudo) -->
+<div class="mbg" id="loginScreen" style="align-items:center">
+  <div class="mbox" style="border-radius:16px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div class="hd-logo" style="font-size:24px;display:block;margin-bottom:4px">V-Bucks <span>Monitor</span></div>
+      <div style="font-size:12px;color:var(--muted)">Entre para continuar</div>
+    </div>
     <div class="field">
-      <label>Personal Access Token</label>
-      <input type="password" id="cfgPat" placeholder="ghp_..." autocomplete="off">
-      <div class="fhint">github.com → Settings → Developer settings → Tokens (classic)</div>
+      <label>Usuário</label>
+      <input type="text" id="loginUser" placeholder="usuario" autocomplete="username" autocapitalize="none">
     </div>
-    <div class="m-actions">
-      <button type="button" class="btn btn-ghost" id="cfgCancel">Cancelar</button>
-      <button type="button" class="btn btn-primary" id="cfgSave">Salvar</button>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
     </div>
+    <div id="loginErr" style="font-size:12px;color:var(--no);margin-bottom:12px;display:none">Usuário ou senha incorretos.</div>
+    <button type="button" class="btn btn-primary" id="btnLogin" style="width:100%;min-height:46px;font-size:15px">Entrar</button>
   </div>
 </div>
 
@@ -384,26 +387,75 @@ const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 const REPO    = 'ejuanoli/Projetos_Python';
 const WF      = 'vbucks_alert.yml';
 
-// ── PAT no localStorage ───────────────────────────
-function getPat() { try { return localStorage.getItem('vbm_pat') || ''; } catch { return ''; } }
-function setPat(v){ try { localStorage.setItem('vbm_pat', v); } catch {} }
-
-// ── Modal ─────────────────────────────────────────
-const modal = document.getElementById('modal');
-function openModal() {
-  document.getElementById('cfgPat').value = getPat();
-  modal.hidden = false;
+// ── Sessão ────────────────────────────────────────
+const SESSION_KEY = 'vbm_session';
+function getSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    if (!s || Date.now() > s.exp) return null;
+    return s;
+  } catch { return null; }
 }
-function closeModal() { modal.hidden = true; }
+function setSession(pat) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      pat, exp: Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 dias
+    }));
+  } catch {}
+}
+function clearSession() {
+  try { localStorage.removeItem(SESSION_KEY); } catch {}
+}
+function getPat() { return getSession()?.pat || ''; }
 
-document.getElementById('btnCfg').addEventListener('click', openModal);
-document.getElementById('cfgCancel').addEventListener('click', closeModal);
-document.getElementById('cfgSave').addEventListener('click', () => {
-  const v = document.getElementById('cfgPat').value.trim();
-  if (!v) { document.getElementById('cfgPat').focus(); return; }
-  setPat(v);
-  closeModal();
-  showMsg('✓ PAT salvo com sucesso.', true);
+// ── Login ─────────────────────────────────────────
+const loginScreen = document.getElementById('loginScreen');
+
+async function tryLogin() {
+  const usuario = document.getElementById('loginUser').value.trim();
+  const senha   = document.getElementById('loginPass').value;
+  const btn     = document.getElementById('btnLogin');
+  const err     = document.getElementById('loginErr');
+  if (!usuario || !senha) return;
+
+  btn.disabled = true; btn.textContent = '⟳';
+  err.style.display = 'none';
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/get_pat`, {
+      method: 'POST',
+      headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_usuario: usuario, p_senha: senha })
+    });
+    const pat = await r.json();
+    if (pat && typeof pat === 'string' && pat.startsWith('ghp_')) {
+      setSession(pat);
+      loginScreen.hidden = true;
+      loadData();
+    } else {
+      err.style.display = 'block';
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+    }
+  } catch(e) {
+    err.textContent = 'Erro de conexão. Tente novamente.';
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+}
+
+document.getElementById('btnLogin').addEventListener('click', tryLogin);
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+
+// ── Logout (botão ⚙) ─────────────────────────────
+document.getElementById('btnCfg').addEventListener('click', () => {
+  if (confirm('Sair da sessão?')) {
+    clearSession();
+    loginScreen.hidden = false;
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+  }
 });
 
 // ── Supabase ──────────────────────────────────────
@@ -565,6 +617,9 @@ async function loadData() {
 }
 
 // ── Boot ──────────────────────────────────────────
-loadData();
-setInterval(loadData, 60_000);
+if (getSession()) {
+  loginScreen.hidden = true;
+  loadData();
+}
+setInterval(() => { if (getSession()) loadData(); }, 60_000);
 </script>
