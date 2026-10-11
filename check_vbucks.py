@@ -71,14 +71,16 @@ def alerta_ja_enviado(data: str) -> bool:
         return False
 
 
-def registrar_envio(data: str, tipo: str, quantidade: int | None = None) -> None:
+def registrar_envio(data: str, tipo: str, quantidade: int | None = None, missoes: list | None = None) -> None:
     url = os.environ.get("SUPABASE_URL", "").rstrip("/")
     if not url:
         return
     endpoint = f"{url}/rest/v1/alertas_vbucks"
-    payload = {"data": data, "tipo": tipo}
+    payload: dict = {"data": data, "tipo": tipo}
     if quantidade is not None:
         payload["quantidade"] = quantidade
+    if missoes:
+        payload["missoes_json"] = missoes
     headers = _supabase_headers()
     headers["Prefer"] = "resolution=merge-duplicates,return=minimal"
     dados = json.dumps(payload).encode()
@@ -230,9 +232,19 @@ def main() -> None:
                 alertas = alertas_de_vbucks(snapshot)
                 if alertas:
                     total = sum(int(a.get("quantity") or 0) for a in alertas)
+                    missoes_data = [
+                        {
+                            "tipo": MISSOES_PT.get((a.get("type") or "").lower(), a.get("type") or "Missão"),
+                            "zona": a.get("zone"),
+                            "poder": a.get("pl"),
+                            "quantidade": int(a.get("quantity") or 0),
+                            "biome": a.get("biome"),
+                        }
+                        for a in alertas
+                    ]
                     enviados = enviar_para_todos(montar_mensagem(alertas))
                     if enviados > 0:
-                        registrar_envio(hoje, "vbucks", total)
+                        registrar_envio(hoje, "vbucks", total, missoes_data)
                     logging.info("Sucesso: %d V-Bucks, enviado para %d usuário(s).", total, enviados)
                 else:
                     msg = f"Hoje ({hoje_fmt}) não há V-Bucks disponíveis no Salve o Mundo."
