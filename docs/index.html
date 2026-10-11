@@ -703,16 +703,27 @@ function renderRuns(runs, alertas) {
       ? Math.round((new Date(run.updated_at) - new Date(run.created_at)) / 1000) + 's'
       : '';
     let alertaTag = '';
-    if (run.conclusion === 'success') {
-      if (alerta && alerta.tipo === 'vbucks') {
-        alertaTag = `<div style="font-size:10px;color:var(--ok);display:flex;align-items:center;gap:3px;margin-top:2px"><img src="${VB_IMG}" width="10" height="10" alt="V">${alerta.quantidade ?? '?'} V-Bucks enviado</div>`;
-      } else if (alerta && alerta.tipo === 'sem_vbucks') {
-        alertaTag = `<div style="font-size:10px;color:var(--muted);margin-top:2px">Sem V-Bucks — alerta enviado</div>`;
+    if (run.status === 'in_progress') {
+      alertaTag = `<div style="font-size:10px;color:var(--ac);margin-top:2px">Rodando…</div>`;
+    } else if (run.conclusion === 'success') {
+      if (alerta) {
+        const runStart  = new Date(run.created_at);
+        const alertSent = new Date(alerta.enviado_em);
+        if (runStart < alertSent) {
+          // este run foi o que enviou o alerta
+          if (alerta.tipo === 'vbucks') {
+            alertaTag = `<div style="font-size:10px;color:var(--ok);display:flex;align-items:center;gap:3px;margin-top:2px"><img src="${VB_IMG}" width="10" height="10" alt="V">${alerta.quantidade ?? '?'} V-Bucks enviado</div>`;
+          } else {
+            alertaTag = `<div style="font-size:10px;color:var(--muted);margin-top:2px">Sem V-Bucks — alerta enviado</div>`;
+          }
+        } else {
+          // run iniciou depois que o alerta já foi enviado por outro run
+          const hora = alertSent.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
+          alertaTag = `<div style="font-size:10px;color:var(--muted);margin-top:2px">Alerta já enviado às ${hora} BRT</div>`;
+        }
       } else {
         alertaTag = `<div style="font-size:10px;color:var(--muted);margin-top:2px">Sem registro de alerta</div>`;
       }
-    } else if (run.status === 'in_progress') {
-      alertaTag = `<div style="font-size:10px;color:var(--ac);margin-top:2px">Rodando…</div>`;
     }
     return `<a class="run-card" href="${run.html_url}" target="_blank" rel="noopener">
       <div class="run-icon ${cls}">${icon}</div>
