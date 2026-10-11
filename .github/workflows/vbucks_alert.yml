@@ -1,0 +1,30 @@
+name: Alertas V-Bucks Salve o Mundo
+
+on:
+  # 23:54 UTC = 20:54 BRT — inicia 5 min antes para absorver atrasos do GitHub Actions
+  # O script tem timeout interno de 11 min, cobrindo até 21:10 BRT (00:10 UTC)
+  schedule:
+    - cron: "54 23 * * *"
+
+  # Permite disparar manualmente caso o agendamento atrase demais
+  workflow_dispatch:
+
+jobs:
+  verificar-vbucks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20  # segurança extra; o script para sozinho em 11 min
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Executar script de alertas
+        env:
+          WHATSAPP_TELEFONE: ${{ secrets.WHATSAPP_TELEFONE }}
+          WHATSAPP_APIKEY: ${{ secrets.WHATSAPP_APIKEY }}
+        run: python check_vbucks.py
