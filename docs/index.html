@@ -1104,9 +1104,23 @@ function refreshUserUI() {
   document.getElementById('profChips').innerHTML = s
     ? `<span class="pf-chip ac">${s.pat ? 'Administrador' : 'Usuário'}</span><span class="pf-chip ${s.tem_whatsapp ? 'ok' : ''}">${s.tem_whatsapp ? (p.telefone ? 'WhatsApp ' + formatPhone(p.telefone) : 'WhatsApp ativo') : 'Sem WhatsApp'}</span>`
     : '';
-  document.getElementById('profSince').textContent = p.criado_em
-    ? 'Membro desde ' + new Date(p.criado_em).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
-    : '';
+  document.getElementById('profSince').textContent = memberSince(p.criado_em);
+}
+function memberSince(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const date = d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  let ago;
+  if (days < 1) ago = 'hoje';
+  else if (days < 30) ago = 'há ' + days + (days === 1 ? ' dia' : ' dias');
+  else if (days < 365) { const m = Math.floor(days / 30); ago = 'há ' + m + (m === 1 ? ' mês' : ' meses'); }
+  else {
+    const y = Math.floor(days / 365), m = Math.floor((days % 365) / 30);
+    ago = 'há ' + y + (y === 1 ? ' ano' : ' anos') + (m ? ' e ' + m + (m === 1 ? ' mês' : ' meses') : '');
+  }
+  return 'Membro desde ' + date + ' · ' + ago;
 }
 function getProfile() {
   try { return JSON.parse(localStorage.getItem('vbm_profile_' + (getSession()?.username || '').toLowerCase()) || '{}'); } catch { return {}; }
