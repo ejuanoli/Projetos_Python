@@ -560,6 +560,17 @@ body {
 .wa-status-t { font-size: 13px; font-weight: 600; color: var(--ok); }
 .wa-status-s { font-size: 12px; color: var(--muted); margin-top: 1px; overflow-wrap: anywhere; }
 .wa-eye { background: none; border: none; color: var(--muted); cursor: pointer; padding: 6px; display: flex; }
+.run-banner {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 12px;
+  border-radius: 12px; background: var(--ac-dim); border: 1px solid var(--ac);
+}
+.run-banner[hidden] { display: none; }
+.run-banner-t { font-size: 13px; font-weight: 600; color: var(--ac); }
+.run-banner-s { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.run-spin {
+  width: 18px; height: 18px; flex-shrink: 0; border-radius: 50%;
+  border: 2.5px solid var(--ac-dim); border-top-color: var(--ac); animation: spin .8s linear infinite;
+}
 .wa-extra { display: flex; gap: 8px; margin-top: 10px; }
 .wa-extra[hidden] { display: none; }
 .wa-act {
@@ -879,6 +890,15 @@ body {
     <img id="hd-wa-icon-top" alt="WhatsApp" width="20" height="20" style="object-fit:contain">
   </button>
   <button type="button" class="btn btn-ghost btn-user" id="btnUser" title="Perfil"></button>
+</div>
+
+<!-- Execução em andamento -->
+<div class="run-banner" id="runBanner" hidden>
+  <span class="run-spin"></span>
+  <div style="min-width:0">
+    <div class="run-banner-t" id="runBannerT"></div>
+    <div class="run-banner-s" id="runBannerS"></div>
+  </div>
 </div>
 
 <!-- Today -->
@@ -1771,7 +1791,7 @@ function renderRuns(runs, alertas) {
   const byDate = Object.fromEntries((alertas || []).map(r => [r.data, r]));
   const MAX_VISIBLE = 2;
   const makeCard = (run) => {
-    const conc   = run.conclusion || (run.status === 'in_progress' ? 'in_progress' : 'skipped');
+    const conc   = run.status !== 'completed' ? 'in_progress' : (run.conclusion || 'skipped');
     const [cls, icon, label] = RUN_LABELS[conc] || ['skip','?', conc];
     const runDate = run.created_at.slice(0,10);
     const alerta  = byDate[runDate];
@@ -1782,8 +1802,8 @@ function renderRuns(runs, alertas) {
       ? Math.round((new Date(run.updated_at) - new Date(run.created_at)) / 1000) + 's'
       : '';
     let alertaTag = '';
-    if (run.status === 'in_progress') {
-      alertaTag = `<div style="font-size:10px;color:var(--ac);margin-top:2px">Rodando…</div>`;
+    if (run.status !== 'completed') {
+      alertaTag = `<div style="font-size:10px;color:var(--ac);margin-top:2px">${run.status === 'in_progress' ? 'Rodando…' : 'Na fila…'}</div>`;
     } else if (run.conclusion === 'success') {
       if (alerta) {
         const runStart  = new Date(run.created_at);
@@ -1839,6 +1859,47 @@ function showMsg(txt, ok) {
   setTimeout(() => { el.className = 'fmsg'; }, 6000);
 }
 
+// ── Estado da execução ────────────────────────────
+let pendingTrigger = 0;
+let fastPoll = null;
+function runHora(iso) {
+  return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'America/Sao_Paulo' });
+}
+function syncRunState(runs) {
+  if (pendingTrigger) {
+    const started = runs.find(r => new Date(r.created_at).getTime() >= pendingTrigger - 60000);
+    if (Date.now() - pendingTrigger > 6 * 60000) pendingTrigger = 0;
+    else if (started && started.status === 'completed') pendingTrigger = 0;
+  }
+  const active = runs.find(r => r.status !== 'completed');
+  const banner = document.getElementById('runBanner');
+  if (active) {
+    document.getElementById('runBannerT').textContent = active.status === 'in_progress' ? 'Workflow em execução' : 'Workflow na fila';
+    document.getElementById('runBannerS').textContent = 'Iniciado às ' + runHora(active.created_at) + ' BRT · atualizando automaticamente';
+    banner.hidden = false;
+  } else if (pendingTrigger) {
+    document.getElementById('runBannerT').textContent = 'Disparo enviado';
+    document.getElementById('runBannerS').textContent = 'Aguardando o GitHub iniciar a execução…';
+    banner.hidden = false;
+  } else {
+    banner.hidden = true;
+  }
+  return !!active || !!pendingTrigger;
+}
+function updateRunBanner(runs) { syncRunState(runs || []); }
+function startFastPoll() {
+  clearInterval(fastPoll);
+  fastPoll = setInterval(async () => {
+    try {
+      const runs = await fetchRuns();
+      cachedRuns = runs;
+      const busy = syncRunState(runs);
+      if (currentView === 'week') renderRuns(runs, cachedAlertas);
+      if (!busy) { clearInterval(fastPoll); fastPoll = null; loadData(); }
+    } catch {}
+  }, 4000);
+}
+
 // ── Trigger ───────────────────────────────────────
 document.getElementById('btnTrigger').addEventListener('click', async () => {
   const pat = getPat();
@@ -1853,8 +1914,10 @@ document.getElementById('btnTrigger').addEventListener('click', async () => {
         body: JSON.stringify({ ref:'main' }) }
     );
     if (r.status === 204) {
+      pendingTrigger = Date.now();
+      updateRunBanner(cachedRuns);
+      startFastPoll();
       showMsg('✓ Workflow disparado! Resultado em ~2 minutos.', true);
-      setTimeout(loadData, 8000);
     } else {
       throw new Error(`GitHub ${r.status}`);
     }
@@ -1870,8 +1933,9 @@ async function loadData() {
     const [alertas, runs] = await Promise.all([fetchAlertas(), fetchRuns()]);
     renderToday(alertas.find(r => r.data === todayUTC()) || null);
     renderGrid(alertas);
-    if (currentView === 'missions') cachedRuns = runs;
-    else renderRuns(runs, alertas);
+    cachedRuns = runs;
+    if (currentView === 'week') renderRuns(runs, alertas);
+    if (syncRunState(runs) && !fastPoll) startFastPoll();
     document.getElementById('lastUp').textContent =
       'Atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
   } catch(e) {
