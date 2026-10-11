@@ -541,6 +541,20 @@ body {
 .pw-rules li.ok { color: var(--ok); }
 .pw-rules li.ok::before { content: '✓'; }
 
+.wa { padding-top: 22px; }
+.wa-head { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; margin-bottom: 16px; }
+.wa-title { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; line-height: 1; }
+.wa-steps { background: var(--surf2); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+.wa-copy {
+  display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 99px; cursor: pointer;
+  background: var(--ac-dim); color: var(--ac); border: none; font-size: 11px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+}
+.wa-copy.done { background: var(--ok-dim); color: var(--ok); }
+.wa-remove { width: 100%; margin-top: 8px; background: none; border: none; color: var(--no); font-size: 12px; cursor: pointer; padding: 10px 0; }
+#btnTrigger { width: 44px; border-radius: 10px; }
+#btnTrigger svg { display: block; }
+
 /* ── WhatsApp setup steps ────────── */
 .wz-toggle {
   display: flex; align-items: center; justify-content: space-between;
@@ -693,22 +707,25 @@ body {
 
 <!-- Modal WhatsApp -->
 <div class="mbg" id="waSheet" hidden>
-  <div class="mbox">
-    <div class="m-title" style="display:flex;align-items:center;gap:8px">
-      <img id="wa-modal-icon" alt="WhatsApp" width="20" height="20" style="object-fit:contain">
-      WhatsApp
+  <div class="mbox pf wa">
+    <button type="button" class="pf-x" id="btnWaCancel" aria-label="Fechar">&times;</button>
+    <div class="wa-head">
+      <img id="wa-modal-icon" alt="WhatsApp" width="52" height="52" style="object-fit:contain">
+      <div class="wa-title">WhatsApp</div>
+      <div class="m-sub" id="waSubtitle" style="margin:0">Configure para receber alertas diários.</div>
     </div>
-    <div class="m-sub" id="waSubtitle" style="margin-bottom:18px">Configure para receber alertas diários.</div>
 
     <div id="waSetupSteps" style="display:none">
-      <div class="wz-steps open" style="margin-bottom:14px">
+      <div class="wa-steps">
         <div class="wz-step">
           <div class="wz-num">1</div>
-          <p>Salve o número <code>+34 644 05 92 17</code> nos contatos (ex: "CallMeBot").</p>
+          <p>Salve o número <code>+34 644 05 92 17</code> nos contatos (ex: "CallMeBot").
+            <button type="button" class="wa-copy" data-copy="+34644059217">Copiar número</button></p>
         </div>
         <div class="wz-step">
           <div class="wz-num">2</div>
-          <p>Envie para esse número: <code>I allow callmebot to send me messages</code></p>
+          <p>Envie para esse número: <code>I allow callmebot to send me messages</code>
+            <button type="button" class="wa-copy" data-copy="I allow callmebot to send me messages">Copiar mensagem</button></p>
         </div>
         <div class="wz-step">
           <div class="wz-num">3</div>
@@ -717,21 +734,21 @@ body {
       </div>
     </div>
 
-    <div class="field">
-      <label for="waPhone">Seu número de WhatsApp</label>
-      <input type="tel" id="waPhone" placeholder="(11) 99999-9999" autocomplete="tel">
-      <div class="fhint" id="waPhoneHint">Pode digitar com DDD, +, espaços ou traços. Ajustamos para você.</div>
+    <div class="pf-card">
+      <label class="pf-line">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+        <input type="tel" id="waPhone" placeholder="(11) 99999-9999" autocomplete="tel" aria-label="Número de WhatsApp">
+      </label>
+      <label class="pf-line">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.9 12.1L20 3"/><path d="M17 6l3 3"/><path d="M14 9l2 2"/></svg>
+        <input type="text" id="waApiKey" placeholder="API key do CallMeBot" inputmode="numeric" autocomplete="off" aria-label="API key do CallMeBot">
+      </label>
     </div>
-    <div class="field">
-      <label for="waApiKey">API key do CallMeBot</label>
-      <input type="text" id="waApiKey" placeholder="1234567" inputmode="numeric">
-    </div>
-    <div id="waErr" style="font-size:12px;color:var(--no);margin-bottom:12px;display:none"></div>
-    <div class="m-actions">
-      <button type="button" class="btn btn-ghost" id="btnWaCancel">Cancelar</button>
-      <button type="button" class="btn btn-primary" id="btnWaSave">Salvar</button>
-    </div>
-    <button type="button" id="btnWaRemove" style="width:100%;margin-top:10px;background:none;border:none;color:var(--no);font-size:12px;cursor:pointer;padding:8px 0;display:none">Remover WhatsApp</button>
+    <div class="fhint" id="waPhoneHint" style="margin:8px 2px 0">Pode digitar com DDD, +, espaços ou traços. Ajustamos para você.</div>
+
+    <div id="waErr" style="font-size:12px;color:var(--no);margin-top:10px;display:none"></div>
+    <button type="button" class="btn btn-primary" id="btnWaSave" style="width:100%;min-height:48px;font-size:15px;margin-top:16px">Salvar</button>
+    <button type="button" id="btnWaRemove" class="wa-remove" style="display:none">Remover WhatsApp</button>
   </div>
 </div>
 
@@ -812,8 +829,8 @@ body {
     <img id="hd-vb-icon" class="hd-vb" alt="V" width="22" height="22" style="object-fit:contain;flex-shrink:0">
     V-Bucks <span>Monitor</span>
   </div>
-  <button type="button" class="btn btn-primary" id="btnTrigger" title="Disparar" style="min-width:44px;padding:0 14px" hidden>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+  <button type="button" class="btn btn-primary" id="btnTrigger" title="Disparar agora" aria-label="Disparar agora" hidden>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12z"/></svg>
   </button>
   <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar" style="min-width:44px;padding:0 12px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -1339,6 +1356,12 @@ function openWaSheet() {
 }
 document.getElementById('btnWa').addEventListener('click', openWaSheet);
 document.getElementById('btnWaTop').addEventListener('click', openWaSheet);
+document.querySelectorAll('.wa-copy').forEach(btn => btn.addEventListener('click', async () => {
+  const label = btn.textContent;
+  try { await navigator.clipboard.writeText(btn.dataset.copy); btn.textContent = 'Copiado ✓'; btn.classList.add('done'); }
+  catch { btn.textContent = 'Selecione e copie'; }
+  setTimeout(() => { btn.textContent = label; btn.classList.remove('done'); }, 1800);
+}));
 document.getElementById('btnWaCancel').addEventListener('click', () => { waSheet.hidden = true; });
 waSheet.addEventListener('click', e => { if (e.target === waSheet) waSheet.hidden = true; });
 
