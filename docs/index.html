@@ -107,7 +107,7 @@ body {
   min-width: 0;
 }
 .hd-logo img { display: block; }
-.hd-logo .hd-vb { filter: var(--logo-filter); }
+.hd-vb { filter: var(--logo-filter); }
 .hd-logo span { color: var(--gold); }
 .hd { gap: 6px; }
 .hd-logo { font-size: clamp(15px, 4.8vw, 19px); gap: 5px; }
@@ -589,7 +589,7 @@ body {
 <div class="mbg" id="loginScreen" style="align-items:center">
   <div class="mbox" style="border-radius:16px">
     <div class="ls-hero">
-      <div class="ls-badge"><img id="ls-vb-icon" alt="V-Bucks" width="40" height="40" style="object-fit:contain"></div>
+      <div class="ls-badge"><img id="ls-vb-icon" class="hd-vb" alt="V-Bucks" width="40" height="40" style="object-fit:contain"></div>
       <div class="ls-title">V-Bucks <span>Monitor</span></div>
       <div class="ls-sub" id="lsSub">Alertas diários de V-Bucks do Salve o Mundo</div>
     </div>
@@ -875,9 +875,10 @@ const WA_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/
 
 // Set icon srcs from embedded data
 (function() {
-  const vbIds = ['ls-vb-icon','legend-vb-icon'];
+  const vbIds = ['legend-vb-icon'];
   const waIds = ['hd-wa-icon','hd-wa-icon-top','wa-modal-icon','wz-toggle-wa-icon'];
   document.getElementById('hd-vb-icon').src = VB_ICON;
+  document.getElementById('ls-vb-icon').src = VB_ICON;
   vbIds.forEach(id => { const el = document.getElementById(id); if (el) el.src = VB_IMG; });
   waIds.forEach(id => { const el = document.getElementById(id); if (el) el.src = WA_ICON; });
 })();
