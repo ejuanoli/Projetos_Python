@@ -359,7 +359,8 @@ body {
 <div class="hd">
   <div class="hd-logo">V-Bucks <span>Monitor</span></div>
   <button type="button" class="btn btn-primary" id="btnTrigger">▶ Disparar</button>
-  <button type="button" class="btn btn-ghost" id="btnCfg" title="PAT">⚙</button>
+  <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar">↻</button>
+  <button type="button" class="btn btn-ghost" id="btnCfg" title="Sair">⚙</button>
 </div>
 
 <!-- Today -->
@@ -462,6 +463,14 @@ async function tryLogin() {
 document.getElementById('btnLogin').addEventListener('click', tryLogin);
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
 document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+
+// ── Refresh manual ───────────────────────────────
+document.getElementById('btnRefresh').addEventListener('click', async () => {
+  const btn = document.getElementById('btnRefresh');
+  btn.disabled = true; btn.textContent = '⟳';
+  await loadData();
+  btn.disabled = false; btn.textContent = '↻';
+});
 
 // ── Logout (botão ⚙) ─────────────────────────────
 document.getElementById('btnCfg').addEventListener('click', () => {
