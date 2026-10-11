@@ -113,6 +113,7 @@ body {
 .hd-logo { font-size: clamp(15px, 4.8vw, 19px); gap: 5px; }
 .hd-logo img { width: 1.1em; height: 1.1em; }
 .hd .btn { border-radius: 50%; flex-shrink: 0; min-width: 36px !important; width: 36px; min-height: 36px; padding: 0 !important; }
+#btnRefresh, #btnWaTop { border-color: transparent; background: none; }
 .btn-user { overflow: hidden; border-radius: 50%; }
 .btn-user img, .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .avatar {
@@ -126,52 +127,55 @@ body {
   background: var(--ok-dim); color: var(--ok);
   display: flex; align-items: center; justify-content: center;
 }
-.pf { position: relative; padding: 0 18px 18px; }
-.pf-cover { height: 56px; margin: 0 -18px; background: linear-gradient(135deg, var(--ac) 0%, var(--ok) 130%); opacity: .55; }
+.pf { position: relative; padding: 26px 18px 20px; }
 .pf-x {
-  position: absolute; top: 8px; right: 10px; width: 30px; height: 30px;
+  position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
   border-radius: 50%; border: none; cursor: pointer;
-  background: rgba(0,0,0,.35); color: #fff; font-size: 20px; line-height: 1;
+  background: var(--surf2); color: var(--muted); font-size: 20px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
 }
-.pf-head { display: flex; flex-direction: column; align-items: center; margin-top: -36px; margin-bottom: 12px; text-align: center; }
-.pf-av { position: relative; background: none; border: none; padding: 0; cursor: pointer; margin-bottom: 6px; }
-.pf-av .avatar { width: 72px; height: 72px; margin: 0; border: 3px solid var(--surf); box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+.pf-head { display: flex; flex-direction: column; align-items: center; margin-bottom: 18px; text-align: center; }
+.pf-ring { position: relative; padding: 3px; border-radius: 50%; margin-bottom: 10px; background: linear-gradient(135deg, var(--ac), var(--ok)); }
+.pf-av { display: block; background: none; border: none; padding: 0; cursor: pointer; border-radius: 50%; }
+.pf-av .avatar { width: 88px; height: 88px; margin: 0; border: 3px solid var(--surf); }
 .pf-cam {
-  position: absolute; right: -2px; bottom: 0; width: 24px; height: 24px; border-radius: 50%;
+  position: absolute; right: -2px; bottom: 2px; width: 26px; height: 26px; border-radius: 50%; pointer-events: none;
   background: var(--ac); color: #fff; border: 2px solid var(--surf);
   display: flex; align-items: center; justify-content: center;
 }
-.pf-name { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: .03em; line-height: 1.1; max-width: 100%; overflow-wrap: anywhere; }
-.pf-handle { font-size: 12px; color: var(--muted); margin-top: 1px; }
-.pf-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 8px; }
-.pf-chip { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: var(--surf2); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+.pf-rm {
+  position: absolute; right: -2px; top: 2px; width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+  background: var(--surf); color: var(--no); border: 1px solid var(--border); font-size: 16px; line-height: 1;
+  align-items: center; justify-content: center; padding: 0;
+}
+.pf-name { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: .03em; line-height: 1.1; max-width: 100%; overflow-wrap: anywhere; }
+.pf-handle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.pf-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+.pf-chip { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--surf2); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
 .pf-chip.ok { background: var(--ok-dim); color: var(--ok); border-color: transparent; }
 .pf-chip.ac { background: var(--ac-dim); color: var(--ac); border-color: transparent; }
-.pf-since { font-size: 11px; color: var(--muted); margin-top: 6px; }
-.pf-card { display: flex; flex-direction: column; gap: 8px; }
-.pf-card input, .pf-card textarea {
-  width: 100%; padding: 10px 12px; background: var(--surf2); border: 1px solid var(--border);
-  border-radius: 10px; color: var(--fg); font-family: 'DM Sans', sans-serif; font-size: 14px; resize: none;
+.pf-since { font-size: 11px; color: var(--muted); margin-top: 8px; }
+.pf-card { background: var(--surf2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.pf-line { display: flex; align-items: center; gap: 10px; padding: 0 14px; color: var(--muted); position: relative; }
+.pf-line + .pf-line { border-top: 1px solid var(--border); }
+.pf-line svg { flex-shrink: 0; }
+.pf-line input, .pf-line textarea {
+  flex: 1; min-width: 0; padding: 14px 0; background: none; border: none; outline: none;
+  color: var(--fg); font-family: 'DM Sans', sans-serif; font-size: 14px; resize: none;
 }
-.pf-card input:focus, .pf-card textarea:focus { outline: 2px solid var(--ac); border-color: transparent; }
-.pf-bio { position: relative; }
+.pf-bio { align-items: flex-start; }
+.pf-bio svg { margin-top: 15px; }
 .pf-bio textarea { padding-bottom: 20px; }
-.pf-bio span { position: absolute; right: 10px; bottom: 6px; font-size: 10px; color: var(--muted); }
-.pf-actions { display: flex; justify-content: space-around; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.pf-bio span { position: absolute; right: 12px; bottom: 6px; font-size: 10px; color: var(--muted); }
+.pf-status { min-height: 16px; font-size: 11px; text-align: center; margin: 8px 0 4px; color: var(--muted); }
+.pf-actions { display: flex; justify-content: space-around; margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--border); }
 .pf-ic {
-  display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px;
-  background: none; border: none; cursor: pointer; color: var(--fg); padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 76px;
+  background: none; border: none; cursor: pointer; color: var(--fg); padding: 4px 0;
 }
-.pf-ic > svg, .pf-ic > img {
-  box-sizing: content-box; width: 22px; height: 22px; padding: 12px; border-radius: 50%;
-  background: var(--surf2); border: 1px solid var(--border);
-}
-.pf-ic small { font-size: 10px; color: var(--muted); }
-.pf-ic:active { opacity: .7; }
-.pf-save > svg { background: var(--ac); border-color: var(--ac); color: #fff; }
-.pf-danger { color: var(--no); }
-.pf-danger > svg { border-color: var(--no); }
+.pf-ic small { font-size: 11px; color: var(--muted); }
+.pf-ic:active { opacity: .6; }
+.pf-danger, .pf-danger small { color: var(--no); }
 .field textarea {
   width: 100%; padding: 11px 13px; resize: none;
   background: var(--surf2); border: 1px solid var(--border);
@@ -734,13 +738,15 @@ body {
 <!-- Modal de perfil -->
 <div class="mbg" id="profileSheet" hidden>
   <div class="mbox pf">
-    <div class="pf-cover"></div>
     <button type="button" id="btnProfClose" aria-label="Fechar" class="pf-x">&times;</button>
     <div class="pf-head">
-      <button type="button" class="pf-av" id="btnAvatarPick" aria-label="Alterar foto">
-        <span class="avatar" id="profAvatar"></span>
+      <div class="pf-ring">
+        <button type="button" class="pf-av" id="btnAvatarPick" aria-label="Alterar foto">
+          <span class="avatar" id="profAvatar"></span>
+        </button>
         <span class="pf-cam"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
-      </button>
+        <button type="button" class="pf-rm" id="btnAvatarRemove" title="Remover foto" aria-label="Remover foto" style="display:none">&times;</button>
+      </div>
       <div class="pf-name" id="profName"></div>
       <div class="pf-handle" id="profSub"></div>
       <div class="pf-chips" id="profChips"></div>
@@ -749,29 +755,27 @@ body {
     <input type="file" id="avatarFile" accept="image/*" hidden>
 
     <div class="pf-card">
-      <input type="text" id="profDisplay" maxlength="40" placeholder="Nome de exibição" aria-label="Nome de exibição">
-      <div class="pf-bio">
+      <label class="pf-line">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <input type="text" id="profDisplay" maxlength="40" placeholder="Nome de exibição" aria-label="Nome de exibição">
+      </label>
+      <label class="pf-line pf-bio">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
         <textarea id="profBio" maxlength="160" rows="2" placeholder="Sobre mim" aria-label="Sobre mim"></textarea>
         <span id="bioCount">0/160</span>
-      </div>
+      </label>
     </div>
-    <div id="profMsg" style="font-size:12px;margin:8px 0 0;display:none"></div>
+    <div id="profMsg" class="pf-status"></div>
 
     <div class="pf-actions">
-      <button type="button" class="pf-ic pf-save" id="btnProfSave" title="Salvar perfil" aria-label="Salvar perfil">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><small>Salvar</small>
-      </button>
       <button type="button" class="pf-ic" id="btnIcons" title="Ícones das missões" aria-label="Ícones das missões">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg><small>Missões</small>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg><small>Missões</small>
       </button>
       <button type="button" class="pf-ic" id="btnWa" title="WhatsApp" aria-label="WhatsApp">
-        <img id="hd-wa-icon" alt="" width="22" height="22" style="object-fit:contain"><small>WhatsApp</small>
-      </button>
-      <button type="button" class="pf-ic" id="btnAvatarRemove" title="Remover foto" aria-label="Remover foto" style="display:none">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg><small>Sem foto</small>
+        <img id="hd-wa-icon" alt="" width="28" height="28" style="object-fit:contain"><small>WhatsApp</small>
       </button>
       <button type="button" class="pf-ic pf-danger" id="btnCfg" title="Sair da conta" aria-label="Sair da conta">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><small>Sair</small>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><small>Sair</small>
       </button>
     </div>
   </div>
@@ -1094,10 +1098,10 @@ function fillProfileForm() {
   document.getElementById('profDisplay').value = p.nome || '';
   document.getElementById('profBio').value = p.bio || '';
   document.getElementById('bioCount').textContent = (p.bio || '').length + '/160';
-  document.getElementById('profMsg').style.display = 'none';
+  document.getElementById('profMsg').textContent = '';
 }
 function openProfile() { refreshUserUI(); fillProfileForm(); profileSheet.hidden = false; }
-function closeProfile() { profileSheet.hidden = true; }
+function closeProfile() { saveProfile(); profileSheet.hidden = true; }
 document.getElementById('btnUser').addEventListener('click', openProfile);
 document.getElementById('btnProfClose').addEventListener('click', closeProfile);
 profileSheet.addEventListener('click', e => { if (e.target === profileSheet) closeProfile(); });
@@ -1105,26 +1109,33 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !profileSh
 document.getElementById('profBio').addEventListener('input', e => {
   document.getElementById('bioCount').textContent = e.target.value.length + '/160';
 });
-document.getElementById('btnProfSave').addEventListener('click', async () => {
+let profTimer = null, profDirty = false;
+async function saveProfile() {
+  clearTimeout(profTimer);
+  if (!profDirty) return;
+  profDirty = false;
   const s = getSession();
   if (!s) return;
-  const btn = document.getElementById('btnProfSave');
   const msg = document.getElementById('profMsg');
   const nome = document.getElementById('profDisplay').value.trim();
   const bio = document.getElementById('profBio').value.trim();
-  btn.disabled = true;
+  msg.style.color = 'var(--muted)'; msg.textContent = 'Salvando...';
   try {
     const res = await rpcAvatar('atualizar_perfil', { p_username: s.username, p_nome: nome || null, p_bio: bio || null });
     if (res && res.erro) throw new Error(res.erro);
     const p = { ...getProfile(), nome, bio };
     try { localStorage.setItem('vbm_profile_' + s.username.toLowerCase(), JSON.stringify(p)); } catch {}
     refreshUserUI();
-    msg.style.color = 'var(--ok)'; msg.textContent = 'Perfil salvo.';
+    msg.style.color = 'var(--ok)'; msg.textContent = 'Salvo ✓';
   } catch (e) {
+    profDirty = true;
     msg.style.color = 'var(--no)'; msg.textContent = 'Não foi possível salvar: ' + e.message;
   }
-  msg.style.display = 'block';
-  btn.disabled = false;
+}
+['profDisplay', 'profBio'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => { profDirty = true; clearTimeout(profTimer); profTimer = setTimeout(saveProfile, 900); });
+  el.addEventListener('blur', saveProfile);
 });
 document.getElementById('btnAvatarPick').addEventListener('click', () => document.getElementById('avatarFile').click());
 async function rpcAvatar(fn, body) {
