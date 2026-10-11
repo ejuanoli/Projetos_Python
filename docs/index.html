@@ -135,9 +135,9 @@ body {
   display: flex; align-items: center; justify-content: center;
 }
 .pf-head { display: flex; flex-direction: column; align-items: center; margin-bottom: 18px; text-align: center; }
-.pf-ring { position: relative; padding: 3px; border-radius: 50%; margin-bottom: 10px; background: linear-gradient(135deg, var(--ac), var(--ok)); }
+.pf-ring { position: relative; border-radius: 50%; margin-bottom: 10px; }
 .pf-av { display: block; background: none; border: none; padding: 0; cursor: pointer; border-radius: 50%; }
-.pf-av .avatar { width: 88px; height: 88px; margin: 0; border: 3px solid var(--surf); }
+.pf-av .avatar { width: 88px; height: 88px; margin: 0; border: none; }
 .pf-cam {
   position: absolute; right: -2px; bottom: 2px; width: 26px; height: 26px; border-radius: 50%; pointer-events: none;
   background: var(--ac); color: #fff; border: 2px solid var(--surf);
@@ -552,7 +552,7 @@ body {
 }
 .wa-copy.done { background: var(--ok-dim); color: var(--ok); }
 .wa-remove { width: 100%; margin-top: 8px; background: none; border: none; color: var(--no); font-size: 12px; cursor: pointer; padding: 10px 0; }
-#btnTrigger { width: 44px; border-radius: 10px; }
+#btnTrigger { border-radius: 8px; }
 #btnTrigger svg { display: block; }
 
 /* ── WhatsApp setup steps ────────── */
@@ -830,7 +830,7 @@ body {
     V-Bucks <span>Monitor</span>
   </div>
   <button type="button" class="btn btn-primary" id="btnTrigger" title="Disparar agora" aria-label="Disparar agora" hidden>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12z"/></svg>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>
   </button>
   <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar" style="min-width:44px;padding:0 12px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -1102,7 +1102,7 @@ function refreshUserUI() {
   document.getElementById('profName').textContent = s ? (p.nome || s.username) : '';
   document.getElementById('profSub').textContent = s ? '@' + s.username : '';
   document.getElementById('profChips').innerHTML = s
-    ? `<span class="pf-chip ac">${s.pat ? 'Administrador' : 'Usuário'}</span><span class="pf-chip ${s.tem_whatsapp ? 'ok' : ''}">${s.tem_whatsapp ? 'WhatsApp ativo' : 'Sem WhatsApp'}</span>`
+    ? `<span class="pf-chip ac">${s.pat ? 'Administrador' : 'Usuário'}</span><span class="pf-chip ${s.tem_whatsapp ? 'ok' : ''}">${s.tem_whatsapp ? (p.telefone ? 'WhatsApp ' + formatPhone(p.telefone) : 'WhatsApp ativo') : 'Sem WhatsApp'}</span>`
     : '';
   document.getElementById('profSince').textContent = p.criado_em
     ? 'Membro desde ' + new Date(p.criado_em).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
@@ -1190,7 +1190,8 @@ async function syncAvatar() {
     try {
       if (av) localStorage.setItem(avatarKey(), av); else localStorage.removeItem(avatarKey());
       localStorage.setItem('vbm_profile_' + s.username.toLowerCase(), JSON.stringify({
-        nome: perfil?.nome || '', bio: perfil?.bio || '', criado_em: perfil?.criado_em || null
+        nome: perfil?.nome || '', bio: perfil?.bio || '', criado_em: perfil?.criado_em || null,
+        telefone: perfil?.telefone || '', apikey: perfil?.whatsapp_apikey || ''
       }));
       localStorage.setItem('vbm_icons_' + s.username.toLowerCase(), JSON.stringify(perfil?.icones || {}));
     } catch {}
@@ -1349,10 +1350,28 @@ function openWaSheet() {
     : 'Configure para receber alertas diários.';
   document.getElementById('waSetupSteps').style.display = hasWa ? 'none' : 'block';
   document.getElementById('btnWaRemove').style.display = hasWa ? 'block' : 'none';
-  document.getElementById('waPhone').value = '';
-  document.getElementById('waApiKey').value = '';
+  const fillWa = pr => {
+    document.getElementById('waPhone').value = pr.telefone ? formatPhone(pr.telefone) : '';
+    document.getElementById('waApiKey').value = pr.apikey || '';
+  };
+  const cached = getProfile();
+  fillWa(hasWa ? cached : {});
+  if (hasWa && !cached.telefone && s) {
+    rpcAvatar('obter_perfil', { p_username: s.username }).then(pf => {
+      if (!pf || !pf.telefone || waSheet.hidden) return;
+      const np = { ...getProfile(), telefone: pf.telefone, apikey: pf.whatsapp_apikey || '' };
+      try { localStorage.setItem('vbm_profile_' + s.username.toLowerCase(), JSON.stringify(np)); } catch {}
+      fillWa(np); refreshUserUI();
+    }).catch(() => {});
+  }
+  document.getElementById('waPhone').dispatchEvent(new Event('input'));
   document.getElementById('waErr').style.display = 'none';
   waSheet.hidden = false;
+}
+function setWaCache(telefone, apikey) {
+  const s = getSession();
+  if (!s) return;
+  try { localStorage.setItem('vbm_profile_' + s.username.toLowerCase(), JSON.stringify({ ...getProfile(), telefone, apikey })); } catch {}
 }
 document.getElementById('btnWa').addEventListener('click', openWaSheet);
 document.getElementById('btnWaTop').addEventListener('click', openWaSheet);
@@ -1385,6 +1404,8 @@ document.getElementById('btnWaSave').addEventListener('click', async () => {
     const data = await r.json();
     if (data && data.ok) {
       setSession({ ...s, tem_whatsapp: true });
+      setWaCache(telefone, apikey);
+      refreshUserUI();
       waSheet.hidden = true;
       showMsg('✓ WhatsApp configurado com sucesso!', true);
     } else {
@@ -1409,6 +1430,8 @@ document.getElementById('btnWaRemove').addEventListener('click', async () => {
       body: JSON.stringify({ p_username: s.username, p_telefone: null, p_apikey: null })
     });
     setSession({ ...s, tem_whatsapp: false });
+    setWaCache('', '');
+    refreshUserUI();
     waSheet.hidden = true;
     showMsg('WhatsApp removido.', true);
   } catch {}
