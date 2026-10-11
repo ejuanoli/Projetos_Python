@@ -670,11 +670,25 @@ body {
     <button type="button" class="btn btn-primary" id="btnProfSave" style="width:100%;min-height:44px;margin-bottom:14px">Salvar perfil</button>
 
     <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:14px">
+      <button type="button" class="btn btn-ghost" id="btnIcons" style="min-height:44px">Ícones das missões</button>
       <button type="button" class="btn btn-ghost" id="btnWa" style="min-height:44px;gap:8px">
         <img id="hd-wa-icon" alt="" width="20" height="20" style="object-fit:contain">WhatsApp
       </button>
       <button type="button" class="btn btn-ghost" id="btnCfg" style="min-height:44px;color:var(--no);border-color:var(--no)">Sair da conta</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal de ícones das missões -->
+<div class="mbg" id="iconsSheet" hidden>
+  <div class="mbox" style="position:relative">
+    <button type="button" id="btnIconsClose" aria-label="Fechar" style="position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:26px;line-height:1;cursor:pointer;padding:6px 10px">&times;</button>
+    <div class="m-title">Ícones das missões</div>
+    <div class="m-sub">Escolha uma imagem para cada tipo de missão.</div>
+    <input type="file" id="iconFile" accept="image/*" hidden>
+    <div id="iconsList" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div id="iconsMsg" style="font-size:12px;margin-top:12px;color:var(--no);display:none"></div>
+    <button type="button" class="btn btn-ghost" id="btnIconsReset" style="width:100%;min-height:42px;margin-top:14px">Restaurar todos</button>
   </div>
 </div>
 
@@ -1011,7 +1025,9 @@ async function syncAvatar() {
       localStorage.setItem('vbm_profile_' + s.username.toLowerCase(), JSON.stringify({
         nome: perfil?.nome || '', bio: perfil?.bio || '', criado_em: perfil?.criado_em || null
       }));
+      localStorage.setItem('vbm_icons_' + s.username.toLowerCase(), JSON.stringify(perfil?.icones || {}));
     } catch {}
+    if (cachedAlertas && cachedAlertas.length) renderGrid(cachedAlertas);
     refreshUserUI();
   } catch {}
 }
@@ -1033,6 +1049,72 @@ document.getElementById('avatarFile').addEventListener('change', e => {
   img.src = url;
 });
 refreshUserUI();
+
+// ── Ícones das missões ────────────────────────────
+const iconsSheet = document.getElementById('iconsSheet');
+let iconTarget = null;
+function renderIconsList() {
+  const custom = getCustomIcons();
+  document.getElementById('iconsList').innerHTML = Object.keys(MISSION_ICONS).map(k => {
+    const name = k.replace(/\b\p{L}/gu, c => c.toUpperCase());
+    return `<div style="display:flex;align-items:center;gap:10px">
+      <div class="mtile">${missionIcon(k)}</div>
+      <div style="flex:1;min-width:0;font-size:13px">${name}</div>
+      <button type="button" class="btn btn-ghost" data-pick="${k}" style="min-height:32px;font-size:12px;padding:0 10px">Trocar</button>
+      ${custom[k] ? `<button type="button" class="btn btn-ghost" data-reset="${k}" style="min-height:32px;font-size:12px;padding:0 10px">Restaurar</button>` : ''}
+    </div>`;
+  }).join('');
+}
+async function saveIcons(icons) {
+  const s = getSession();
+  if (!s) return;
+  const empty = !Object.keys(icons).length;
+  try { localStorage.setItem('vbm_icons_' + s.username.toLowerCase(), JSON.stringify(icons)); } catch {}
+  renderIconsList();
+  if (cachedAlertas && cachedAlertas.length) renderGrid(cachedAlertas);
+  const msg = document.getElementById('iconsMsg');
+  try {
+    const res = await rpcAvatar('atualizar_icones', { p_username: s.username, p_icones: empty ? null : icons });
+    if (res && res.erro) throw new Error(res.erro);
+    msg.style.display = 'none';
+  } catch (e) {
+    msg.textContent = 'Não foi possível salvar no servidor: ' + e.message;
+    msg.style.display = 'block';
+  }
+}
+function closeIcons() { iconsSheet.hidden = true; }
+document.getElementById('btnIcons').addEventListener('click', () => {
+  profileSheet.hidden = true;
+  document.getElementById('iconsMsg').style.display = 'none';
+  renderIconsList();
+  iconsSheet.hidden = false;
+});
+document.getElementById('btnIconsClose').addEventListener('click', closeIcons);
+iconsSheet.addEventListener('click', e => { if (e.target === iconsSheet) closeIcons(); });
+document.getElementById('iconsList').addEventListener('click', e => {
+  const pick = e.target.closest('[data-pick]');
+  const reset = e.target.closest('[data-reset]');
+  if (pick) { iconTarget = pick.dataset.pick; document.getElementById('iconFile').click(); }
+  if (reset) { const c = getCustomIcons(); delete c[reset.dataset.reset]; saveIcons(c); }
+});
+document.getElementById('btnIconsReset').addEventListener('click', () => saveIcons({}));
+document.getElementById('iconFile').addEventListener('change', e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f || !iconTarget) return;
+  const key = iconTarget;
+  const img = new Image();
+  const url = URL.createObjectURL(f);
+  img.onload = () => {
+    const size = 96, c = document.createElement('canvas');
+    c.width = c.height = size;
+    const m = Math.min(img.width, img.height);
+    c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size);
+    URL.revokeObjectURL(url);
+    saveIcons({ ...getCustomIcons(), [key]: c.toDataURL('image/png') });
+  };
+  img.src = url;
+});
 
 // ── Logout sheet ──────────────────────────────────
 const logoutSheet = document.getElementById('logoutSheet');
@@ -1224,8 +1306,13 @@ const MISSION_ICONS = {
   'destruir os acampamentos': _ic('<path d="M12 3l9 17H3z"/><path d="M12 10v4"/><path d="M9 20l3-5 3 5"/>'),
   'enfrentar a tempestade': _ic('<path d="M17 18a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.5 3.5 0 0 0 6 18z"/><path d="M12 12l-2 4h3l-1 3"/>'),
 };
+function getCustomIcons() {
+  try { return JSON.parse(localStorage.getItem('vbm_icons_' + (getSession()?.username || '').toLowerCase()) || '{}') || {}; } catch { return {}; }
+}
 function missionIcon(tipo) {
   const t = (tipo || '').toLowerCase();
+  const custom = getCustomIcons()[t];
+  if (custom) return `<img src="${custom}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:block">`;
   if (MISSION_ICONS[t]) return MISSION_ICONS[t];
   if (t.includes('tempestade')) return MISSION_ICONS['enfrentar a tempestade'];
   return _ic('<circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/>');
