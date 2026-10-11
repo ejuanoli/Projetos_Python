@@ -331,8 +331,8 @@ body {
       <div class="fhint">github.com → Settings → Developer settings → Tokens (classic)</div>
     </div>
     <div class="m-actions">
-      <button class="btn btn-ghost" id="cfgCancel">Cancelar</button>
-      <button class="btn btn-primary" id="cfgSave">Salvar</button>
+      <button type="button" class="btn btn-ghost" id="cfgCancel">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="cfgSave">Salvar</button>
     </div>
   </div>
 </div>
@@ -340,8 +340,8 @@ body {
 <!-- Header -->
 <div class="hd">
   <div class="hd-logo">V-Bucks <span>Monitor</span></div>
-  <button class="btn btn-primary" id="btnTrigger">▶ Disparar</button>
-  <button class="btn btn-ghost" id="btnCfg" title="PAT">⚙</button>
+  <button type="button" class="btn btn-primary" id="btnTrigger">▶ Disparar</button>
+  <button type="button" class="btn btn-ghost" id="btnCfg" title="PAT">⚙</button>
 </div>
 
 <!-- Today -->
@@ -400,8 +400,10 @@ document.getElementById('btnCfg').addEventListener('click', openModal);
 document.getElementById('cfgCancel').addEventListener('click', closeModal);
 document.getElementById('cfgSave').addEventListener('click', () => {
   const v = document.getElementById('cfgPat').value.trim();
+  if (!v) { document.getElementById('cfgPat').focus(); return; }
   setPat(v);
   closeModal();
+  showMsg('✓ PAT salvo com sucesso.', true);
 });
 
 // ── Supabase ──────────────────────────────────────
