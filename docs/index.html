@@ -1,4 +1,5 @@
 <title>V-Bucks Monitor</title>
+<link rel="icon" type="image/png" href="https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
 
@@ -161,6 +162,54 @@ body {
 /* ── V-Bucks coin icon ───────────── */
 .vb-coin { flex-shrink: 0; display: inline-block; }
 .today-vb { vertical-align: middle; margin-right: 6px; }
+
+/* ── view toggle ─────────────────── */
+.view-tabs {
+  display: flex; gap: 0;
+  background: var(--surf2); border-radius: 8px;
+  padding: 3px; margin-bottom: 10px;
+}
+.vt {
+  flex: 1; padding: 6px 0;
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--muted); border-radius: 6px;
+  cursor: pointer; border: none; background: transparent;
+  transition: background .15s, color .15s;
+}
+.vt.active { background: var(--surf); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+/* ── week view ───────────────────── */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px; margin-bottom: 6px;
+}
+.wdc {
+  border-radius: 8px;
+  background: var(--surf); border: 1px solid var(--border);
+  padding: 6px 2px; min-height: 72px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.wdc.ok   { background: var(--ok-dim);   border-color: var(--ok); }
+.wdc.no   { background: var(--no-dim);   border-color: var(--no); }
+.wdc.wait { background: var(--surf2); }
+.wdc.future{ background: var(--surf2); opacity: .35; }
+.wdc.td   { outline: 2px solid var(--ac); outline-offset: 2px; }
+.wdc-dow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 8px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted);
+}
+.wdc-day { font-size: 15px; font-weight: 700; line-height: 1.1; color: var(--fg); }
+.wdc.ok .wdc-day { color: var(--ok); }
+.wdc.no .wdc-day { color: var(--no); }
+.wdc-icon { width: 20px; height: 20px; object-fit: contain; }
+.wdc-qty  { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700; color: var(--ok); }
+.wdc-dash { font-size: 14px; color: var(--no); line-height: 1; }
+.wdc-q    { font-size: 11px; color: var(--muted); }
 
 /* ── 30-day grid ─────────────────── */
 .grid30 {
@@ -360,7 +409,9 @@ body {
   <div class="hd-logo">V-Bucks <span>Monitor</span></div>
   <button type="button" class="btn btn-primary" id="btnTrigger">▶ Disparar</button>
   <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar">↻</button>
-  <button type="button" class="btn btn-ghost" id="btnCfg" title="Sair">⚙</button>
+  <button type="button" class="btn btn-ghost" id="btnCfg" title="Sair" style="padding:0 10px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+  </button>
 </div>
 
 <!-- Today -->
@@ -374,10 +425,13 @@ body {
 <div class="fmsg" id="fmsg"></div>
 
 <!-- History -->
-<div class="sh">Últimos 30 dias</div>
-<div class="grid30" id="grid"></div>
+<div class="view-tabs" style="margin-top:20px">
+  <button type="button" class="vt active" data-view="week">Semana</button>
+  <button type="button" class="vt" data-view="month">30 dias</button>
+</div>
+<div id="grid"></div>
 <div class="legend" style="margin-top:6px">
-  <div class="li"><svg class="vb-coin" width="11" height="11" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#1DA7FF"/><path d="M6 6.5L10 14L14 6.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>V-Bucks</div>
+  <div class="li"><img class="vb-coin" src="https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png" width="11" height="11" alt="V-Bucks">V-Bucks</div>
   <div class="li"><div class="ld no"></div>Sem V-Bucks</div>
   <div class="li"><div class="ld"></div>Sem registro</div>
 </div>
@@ -522,7 +576,7 @@ function renderToday(row) {
   }
   const hora = new Date(row.enviado_em)
     .toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
-  const vbSvg = `<svg class="today-vb" width="0.75em" height="0.75em" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#1DA7FF"/><path d="M6 6.5L10 14L14 6.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
+  const vbSvg = `<img class="today-vb" src="${VB_IMG}" alt="V-Bucks" style="width:0.8em;height:0.8em;object-fit:contain;vertical-align:middle;margin-right:6px">`;
   if (row.tipo === 'vbucks') {
     card.className = 'today ok';
     card.innerHTML = `<div class="today-eye">Hoje · ${label}</div>
@@ -536,49 +590,84 @@ function renderToday(row) {
   }
 }
 
-// ── Grid 30 dias ──────────────────────────────────
-function renderGrid(rows) {
+// ── Grid ──────────────────────────────────────────
+const VB_IMG = 'https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png';
+let currentView = 'week';
+let cachedAlertas = [];
+
+function renderWeek(rows) {
   const byDate = Object.fromEntries(rows.map(r => [r.data, r]));
   const key0   = todayUTC();
-  const grid   = document.getElementById('grid');
-
-  const days = ['D','S','T','Q','Q','S','S'];
-  let html = days.map(d => `<div class="dh">${d}</div>`).join('');
-
-  // calcula o dia da semana do primeiro dia (hoje - 29)
-  const first = new Date();
-  first.setUTCDate(first.getUTCDate() - 29);
-  first.setUTCHours(12,0,0,0);
-  for (let p = 0; p < first.getDay(); p++) {
-    html += '<div class="dc empty"></div>';
+  const DOWS   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const today  = new Date(); today.setUTCHours(12,0,0,0);
+  const dow    = today.getDay();
+  let html = '';
+  for (let i = -dow; i <= 6 - dow; i++) {
+    const d = new Date(); d.setUTCDate(d.getUTCDate() + i); d.setUTCHours(12,0,0,0);
+    const k = d.toISOString().slice(0,10);
+    const num = d.getUTCDate();
+    const row = byDate[k];
+    const isFuture = i > 0;
+    const isToday  = i === 0;
+    let cls = 'wdc' + (isToday ? ' td' : '');
+    if (isFuture) cls += ' future';
+    else if (row) cls += row.tipo === 'vbucks' ? ' ok' : ' no';
+    else cls += ' wait';
+    let inner = `<span class="wdc-dow">${DOWS[d.getDay()]}</span><span class="wdc-day">${num}</span>`;
+    if (!isFuture) {
+      if (row && row.tipo === 'vbucks') {
+        inner += `<img class="wdc-icon" src="${VB_IMG}" alt="V">`;
+        if (row.quantidade) inner += `<span class="wdc-qty">${row.quantidade}</span>`;
+      } else if (row) {
+        inner += `<span class="wdc-dash">—</span>`;
+      } else {
+        inner += `<span class="wdc-q">?</span>`;
+      }
+    }
+    html += `<div class="${cls}">${inner}</div>`;
   }
+  document.getElementById('grid').innerHTML = `<div class="week-grid">${html}</div>`;
+}
 
+function renderMonth(rows) {
+  const byDate = Object.fromEntries(rows.map(r => [r.data, r]));
+  const key0   = todayUTC();
+  const days   = ['D','S','T','Q','Q','S','S'];
+  let html = days.map(d => `<div class="dh">${d}</div>`).join('');
+  const first = new Date(); first.setUTCDate(first.getUTCDate() - 29); first.setUTCHours(12,0,0,0);
+  for (let p = 0; p < first.getDay(); p++) html += '<div class="dc empty"></div>';
   for (let i = 29; i >= 0; i--) {
-    const d = new Date();
-    d.setUTCDate(d.getUTCDate() - i);
-    d.setUTCHours(12,0,0,0);
+    const d = new Date(); d.setUTCDate(d.getUTCDate() - i); d.setUTCHours(12,0,0,0);
     const k   = d.toISOString().slice(0,10);
     const num = d.getUTCDate();
     const lbl = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
     const row = byDate[k];
-
-    let cls = 'dc' + (k === key0 ? ' td' : '');
-    let tip = `${lbl}: sem registro`;
+    let cls   = 'dc' + (k === key0 ? ' td' : '');
+    let tip   = `${lbl}: sem registro`;
     let inner = num;
-
     if (row) {
-      cls += row.tipo === 'vbucks' ? ' ok' : ' no';
-      tip = row.tipo === 'vbucks'
-        ? `${lbl}: ${row.quantidade ?? '?'} V-Bucks`
-        : `${lbl}: sem V-Bucks`;
-      if (row.tipo === 'vbucks') {
-        inner = `<svg width="10" height="10" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="rgba(255,255,255,.25)"/><path d="M6 6.5L10 14L14 6.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
-      }
+      cls  += row.tipo === 'vbucks' ? ' ok' : ' no';
+      tip   = row.tipo === 'vbucks' ? `${lbl}: ${row.quantidade ?? '?'} V-Bucks` : `${lbl}: sem V-Bucks`;
+      if (row.tipo === 'vbucks') inner = `<img src="${VB_IMG}" alt="V" style="width:10px;height:10px;object-fit:contain">`;
     }
     html += `<div class="${cls}" data-tip="${tip}">${inner}</div>`;
   }
-  grid.innerHTML = html;
+  document.getElementById('grid').innerHTML = `<div class="grid30">${html}</div>`;
 }
+
+function renderGrid(rows) {
+  cachedAlertas = rows;
+  if (currentView === 'week') renderWeek(rows);
+  else renderMonth(rows);
+}
+
+document.querySelectorAll('.vt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentView = btn.dataset.view;
+    document.querySelectorAll('.vt').forEach(b => b.classList.toggle('active', b === btn));
+    renderGrid(cachedAlertas);
+  });
+});
 
 // ── Runs ──────────────────────────────────────────
 const RUN_LABELS = {
@@ -590,23 +679,38 @@ const RUN_LABELS = {
 };
 const EVENT_PT = { schedule: 'Agendado', workflow_dispatch: 'Manual', push: 'Push' };
 
-function renderRuns(runs) {
+function renderRuns(runs, alertas) {
   const list = document.getElementById('runList');
   if (!runs.length) { list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Nenhuma execução encontrada.</div>'; return; }
+  const byDate = Object.fromEntries((alertas || []).map(r => [r.data, r]));
   list.innerHTML = runs.map(run => {
     const conc   = run.conclusion || (run.status === 'in_progress' ? 'in_progress' : 'skipped');
     const [cls, icon, label] = RUN_LABELS[conc] || ['skip','?', conc];
-    const dt     = new Date(run.created_at)
+    const runDate = run.created_at.slice(0,10);
+    const alerta  = byDate[runDate];
+    const dt      = new Date(run.created_at)
       .toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' });
-    const evento = EVENT_PT[run.event] || run.event;
-    const dur    = run.updated_at && run.status === 'completed'
+    const evento  = EVENT_PT[run.event] || run.event;
+    const dur     = run.updated_at && run.status === 'completed'
       ? Math.round((new Date(run.updated_at) - new Date(run.created_at)) / 1000) + 's'
       : '';
+    let alertaTag = '';
+    if (run.conclusion === 'success') {
+      if (alerta && alerta.tipo === 'vbucks') {
+        alertaTag = `<div style="font-size:10px;color:var(--ok);display:flex;align-items:center;gap:3px;margin-top:2px"><img src="${VB_IMG}" width="10" height="10" alt="V">${alerta.quantidade ?? '?'} V-Bucks enviado</div>`;
+      } else if (alerta && alerta.tipo === 'sem_vbucks') {
+        alertaTag = `<div style="font-size:10px;color:var(--muted);margin-top:2px">Sem V-Bucks — alerta enviado</div>`;
+      } else {
+        alertaTag = `<div style="font-size:10px;color:var(--muted);margin-top:2px">Sem registro de alerta</div>`;
+      }
+    } else if (run.status === 'in_progress') {
+      alertaTag = `<div style="font-size:10px;color:var(--ac);margin-top:2px">Rodando…</div>`;
+    }
     return `<a class="run-card" href="${run.html_url}" target="_blank" rel="noopener">
       <div class="run-icon ${cls}">${icon}</div>
       <div class="run-info">
         <div class="run-title">${dt} BRT</div>
-        <div class="run-meta">${evento}${dur ? ' · ' + dur : ''}</div>
+        <div class="run-meta">${evento}${dur ? ' · ' + dur : ''}${alertaTag}</div>
       </div>
       <div class="run-badge ${cls}">${label}</div>
     </a>`;
@@ -650,7 +754,7 @@ async function loadData() {
     const [alertas, runs] = await Promise.all([fetchAlertas(), fetchRuns()]);
     renderToday(alertas.find(r => r.data === todayUTC()) || null);
     renderGrid(alertas);
-    renderRuns(runs);
+    renderRuns(runs, alertas);
     document.getElementById('lastUp').textContent =
       'Atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
   } catch(e) {
