@@ -911,10 +911,43 @@ function refreshUserUI() {
 document.getElementById('btnUser').addEventListener('click', () => { refreshUserUI(); profileSheet.hidden = false; });
 document.getElementById('btnProfClose').addEventListener('click', () => { profileSheet.hidden = true; });
 document.getElementById('btnAvatarPick').addEventListener('click', () => document.getElementById('avatarFile').click());
-document.getElementById('btnAvatarRemove').addEventListener('click', () => {
-  try { localStorage.removeItem(avatarKey()); } catch {}
+async function rpcAvatar(fn, body) {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+async function saveAvatar(dataUrl) {
+  const s = getSession();
+  if (!s) return;
+  try {
+    if (dataUrl) localStorage.setItem(avatarKey(), dataUrl); else localStorage.removeItem(avatarKey());
+  } catch {}
   refreshUserUI();
-});
+  try {
+    const res = await rpcAvatar('atualizar_avatar', { p_username: s.username, p_avatar: dataUrl });
+    if (res && res.erro) throw new Error(res.erro);
+  } catch (e) {
+    alert('Não foi possível salvar a foto no servidor: ' + e.message);
+  }
+}
+let avatarSynced = false;
+async function syncAvatar() {
+  const s = getSession();
+  if (!s || avatarSynced) return;
+  try {
+    const av = await rpcAvatar('obter_avatar', { p_username: s.username });
+    avatarSynced = true;
+    try {
+      if (av) localStorage.setItem(avatarKey(), av); else localStorage.removeItem(avatarKey());
+    } catch {}
+    refreshUserUI();
+  } catch {}
+}
+document.getElementById('btnAvatarRemove').addEventListener('click', () => saveAvatar(null));
 document.getElementById('avatarFile').addEventListener('change', e => {
   const f = e.target.files[0];
   e.target.value = '';
@@ -927,8 +960,7 @@ document.getElementById('avatarFile').addEventListener('change', e => {
     const m = Math.min(img.width, img.height);
     c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size);
     URL.revokeObjectURL(url);
-    try { localStorage.setItem(avatarKey(), c.toDataURL('image/jpeg', 0.85)); } catch {}
-    refreshUserUI();
+    saveAvatar(c.toDataURL('image/jpeg', 0.85));
   };
   img.src = url;
 });
@@ -941,6 +973,7 @@ document.getElementById('btnLogoutCancel').addEventListener('click', () => { log
 document.getElementById('btnLogoutConfirm').addEventListener('click', () => {
   logoutSheet.hidden = true;
   clearSession();
+  avatarSynced = false;
   loginScreen.hidden = false;
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
@@ -1319,6 +1352,7 @@ document.getElementById('btnTrigger').addEventListener('click', async () => {
 // ── Load ──────────────────────────────────────────
 async function loadData() {
   refreshUserUI();
+  syncAvatar();
   try {
     const [alertas, runs] = await Promise.all([fetchAlertas(), fetchRuns()]);
     renderToday(alertas.find(r => r.data === todayUTC()) || null);
