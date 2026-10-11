@@ -24,9 +24,11 @@
   --wait:     #5b21b6;
   --wait-dim: rgba(91,33,182,.10);
   --r: 12px;
+  --logo-filter: none;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    --logo-filter: brightness(0) invert(1);
     --bg:       #060e1b;
     --surf:     #0c1828;
     --surf2:    #122033;
@@ -46,6 +48,7 @@
   }
 }
 :root[data-theme="dark"] {
+  --logo-filter: brightness(0) invert(1);
   --bg:       #060e1b;
   --surf:     #0c1828;
   --surf2:    #122033;
@@ -100,9 +103,27 @@ body {
   display: flex;
   align-items: center;
   gap: 7px;
+  white-space: nowrap;
+  min-width: 0;
 }
 .hd-logo img { display: block; }
+.hd-logo .hd-vb { filter: var(--logo-filter); }
 .hd-logo span { color: var(--gold); }
+.hd .btn { flex-shrink: 0; }
+.btn-user { padding: 0 !important; min-width: 40px; width: 40px; overflow: hidden; border-radius: 50%; }
+.btn-user img, .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar {
+  width: 88px; height: 88px; border-radius: 50%; overflow: hidden;
+  background: var(--surf2); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); margin: 0 auto 10px;
+}
+.mtile {
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  background: var(--ok-dim); color: var(--ok);
+  display: flex; align-items: center; justify-content: center;
+}
+.pw { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
 
 .btn {
   display: inline-flex;
@@ -616,6 +637,25 @@ body {
   </div>
 </div>
 
+<!-- Modal de perfil -->
+<div class="mbg" id="profileSheet" hidden>
+  <div class="mbox">
+    <div class="avatar" id="profAvatar"></div>
+    <div class="m-title" id="profName" style="text-align:center"></div>
+    <div class="m-sub" id="profSub" style="text-align:center"></div>
+    <input type="file" id="avatarFile" accept="image/*" hidden>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button type="button" class="btn btn-ghost" id="btnAvatarPick" style="min-height:44px">Alterar foto de perfil</button>
+      <button type="button" class="btn btn-ghost" id="btnAvatarRemove" style="min-height:44px;display:none">Remover foto</button>
+      <button type="button" class="btn btn-ghost" id="btnWa" style="min-height:44px;gap:8px">
+        <img id="hd-wa-icon" alt="" width="20" height="20" style="object-fit:contain">WhatsApp
+      </button>
+      <button type="button" class="btn btn-ghost" id="btnCfg" style="min-height:44px;color:var(--no);border-color:var(--no)">Sair da conta</button>
+      <button type="button" class="btn btn-ghost" id="btnProfClose" style="min-height:44px;border:none">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal de confirmação de logout -->
 <div class="mbg" id="logoutSheet" hidden>
   <div class="mbox">
@@ -631,7 +671,7 @@ body {
 <!-- Header -->
 <div class="hd">
   <div class="hd-logo">
-    <img id="hd-vb-icon" alt="V" width="22" height="22" style="object-fit:contain;flex-shrink:0">
+    <img id="hd-vb-icon" class="hd-vb" alt="V" width="22" height="22" style="object-fit:contain;flex-shrink:0">
     V-Bucks <span>Monitor</span>
   </div>
   <button type="button" class="btn btn-primary" id="btnTrigger" title="Disparar" style="min-width:44px;padding:0 14px" hidden>
@@ -640,12 +680,7 @@ body {
   <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar" style="min-width:44px;padding:0 12px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
   </button>
-  <button type="button" class="btn btn-ghost" id="btnWa" title="WhatsApp" style="min-width:44px;padding:0 12px">
-    <img id="hd-wa-icon" alt="WhatsApp" width="20" height="20" style="object-fit:contain">
-  </button>
-  <button type="button" class="btn btn-ghost" id="btnCfg" title="Sair" style="min-width:40px;padding:0 10px">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-  </button>
+  <button type="button" class="btn btn-ghost btn-user" id="btnUser" title="Perfil"></button>
 </div>
 
 <!-- Today -->
@@ -685,7 +720,7 @@ body {
 
 <!-- Footer -->
 <div class="ft">
-  <div><span class="pulse"></span>Atualiza a cada 60 s</div>
+  <div style="white-space:nowrap"><span class="pulse"></span>Atualiza a cada 30s</div>
   <div id="lastUp">—</div>
 </div>
 
@@ -694,13 +729,15 @@ const SB_URL  = 'https://otytppcftpqtdpmfxkic.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eXRwcGNmdHBxdGRwbWZ4a2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5ODEyMzAsImV4cCI6MjEwNjU1NzIzMH0.l7WiV2gIGAR02F4mRukKtzse1X3qfXSAp9j9QZFGZ5w';
 const REPO    = 'ejuanoli/Projetos_Python';
 const WF      = 'vbucks_alert.yml';
-const VB_IMG  = 'data:image/png;base64,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';
+const VB_IMG  = 'https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png';
+const VB_ICON = 'data:image/png;base64,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';
 const WA_ICON = 'data:image/png;base64,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';
 
 // Set icon srcs from embedded data
 (function() {
-  const vbIds = ['hd-vb-icon','ls-vb-icon','legend-vb-icon'];
+  const vbIds = ['ls-vb-icon','legend-vb-icon'];
   const waIds = ['hd-wa-icon','wa-modal-icon','wz-toggle-wa-icon'];
+  document.getElementById('hd-vb-icon').src = VB_ICON;
   vbIds.forEach(id => { const el = document.getElementById(id); if (el) el.src = VB_IMG; });
   waIds.forEach(id => { const el = document.getElementById(id); if (el) el.src = WA_ICON; });
 })();
@@ -856,9 +893,50 @@ document.getElementById('btnRefresh').addEventListener('click', async () => {
   btn.disabled = false; btn.classList.remove('spinning');
 });
 
+// ── Perfil / avatar ───────────────────────────────
+const USER_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+const profileSheet = document.getElementById('profileSheet');
+function avatarKey() { const s = getSession(); return s ? 'vbm_avatar_' + s.username.toLowerCase() : null; }
+function getAvatar() { try { const k = avatarKey(); return k ? localStorage.getItem(k) : null; } catch { return null; } }
+function refreshUserUI() {
+  const av = getAvatar();
+  const inner = av ? `<img src="${av}" alt="">` : USER_SVG;
+  document.getElementById('btnUser').innerHTML = inner;
+  document.getElementById('profAvatar').innerHTML = av ? `<img src="${av}" alt="">` : USER_SVG.replace('width="18" height="18"', 'width="40" height="40"');
+  document.getElementById('btnAvatarRemove').style.display = av ? 'flex' : 'none';
+  const s = getSession();
+  document.getElementById('profName').textContent = s ? s.username : '';
+  document.getElementById('profSub').textContent = s ? (s.pat ? 'Administrador' : 'Usuário') + (s.tem_whatsapp ? ' · WhatsApp ativo' : ' · Sem WhatsApp') : '';
+}
+document.getElementById('btnUser').addEventListener('click', () => { refreshUserUI(); profileSheet.hidden = false; });
+document.getElementById('btnProfClose').addEventListener('click', () => { profileSheet.hidden = true; });
+document.getElementById('btnAvatarPick').addEventListener('click', () => document.getElementById('avatarFile').click());
+document.getElementById('btnAvatarRemove').addEventListener('click', () => {
+  try { localStorage.removeItem(avatarKey()); } catch {}
+  refreshUserUI();
+});
+document.getElementById('avatarFile').addEventListener('change', e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  const img = new Image();
+  const url = URL.createObjectURL(f);
+  img.onload = () => {
+    const size = 160, c = document.createElement('canvas');
+    c.width = c.height = size;
+    const m = Math.min(img.width, img.height);
+    c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size);
+    URL.revokeObjectURL(url);
+    try { localStorage.setItem(avatarKey(), c.toDataURL('image/jpeg', 0.85)); } catch {}
+    refreshUserUI();
+  };
+  img.src = url;
+});
+refreshUserUI();
+
 // ── Logout sheet ──────────────────────────────────
 const logoutSheet = document.getElementById('logoutSheet');
-document.getElementById('btnCfg').addEventListener('click', () => { logoutSheet.hidden = false; });
+document.getElementById('btnCfg').addEventListener('click', () => { profileSheet.hidden = true; logoutSheet.hidden = false; });
 document.getElementById('btnLogoutCancel').addEventListener('click', () => { logoutSheet.hidden = true; });
 document.getElementById('btnLogoutConfirm').addEventListener('click', () => {
   logoutSheet.hidden = true;
@@ -878,6 +956,7 @@ document.getElementById('btnLogoutConfirm').addEventListener('click', () => {
 const waSheet = document.getElementById('waSheet');
 
 function openWaSheet() {
+  profileSheet.hidden = true;
   const s = getSession();
   const hasWa = s?.tem_whatsapp;
   document.getElementById('waSubtitle').textContent = hasWa
@@ -1032,6 +1111,26 @@ function renderWeek(rows) {
   document.getElementById('grid').innerHTML = `<div class="week-grid">${html}</div>`;
 }
 
+const _ic = p => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const MISSION_ICONS = {
+  'recuperar os dados': _ic('<path d="M12 21s-6-5.5-6-10a6 6 0 0 1 12 0c0 4.5-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>'),
+  'consertar o abrigo': _ic('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h6"/><path d="M20 13l-5 5m0 0a2.5 2.5 0 1 0 3.5 3.5L21 19"/>'),
+  'evacuar o abrigo': _ic('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>'),
+  'evacuar os sobreviventes': _ic('<circle cx="9" cy="7" r="3"/><path d="M3 21v-2a5 5 0 0 1 5-5h2"/><path d="M14 17h7m-3-3l3 3-3 3"/>'),
+  'cavalgar o raio': _ic('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'),
+  'entregar a bomba': _ic('<circle cx="11" cy="14" r="7"/><path d="M15 8l2-2m0 0l2-1m-2 1l1 2"/>'),
+  'construir a grade de radar': _ic('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 12l6-6"/>'),
+  'destruir os acampamentos': _ic('<path d="M12 3l9 17H3z"/><path d="M12 10v4"/><path d="M9 20l3-5 3 5"/>'),
+  'enfrentar a tempestade': _ic('<path d="M17 18a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.5 3.5 0 0 0 6 18z"/><path d="M12 12l-2 4h3l-1 3"/>'),
+};
+function missionIcon(tipo) {
+  const t = (tipo || '').toLowerCase();
+  if (MISSION_ICONS[t]) return MISSION_ICONS[t];
+  if (t.includes('tempestade')) return MISSION_ICONS['enfrentar a tempestade'];
+  return _ic('<circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/>');
+}
+const BOLT_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>';
+
 function renderMissions(rows) {
   const today = todayUTC();
   const container = document.getElementById('grid');
@@ -1056,11 +1155,11 @@ function renderMissions(rows) {
       if (row.missoes_json && row.missoes_json.length) {
         missionBody = row.missoes_json.map(m => `
           <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)">
-            <img src="${VB_IMG}" width="20" height="20" alt="V" style="flex-shrink:0;margin-top:2px;object-fit:contain">
+            <div class="mtile">${missionIcon(m.tipo)}</div>
             <div style="min-width:0">
-              <div style="font-size:13px;font-weight:600;color:var(--ok)">${m.quantidade} V-Bucks</div>
-              <div style="font-size:11px;color:var(--fg)">${m.tipo || 'Missão'}</div>
-              ${m.zona ? `<div style="font-size:11px;color:var(--muted)">${m.zona}${m.poder ? ' · poder ' + m.poder : ''}${m.biome ? ' · ' + m.biome : ''}</div>` : ''}
+              <div style="font-size:13px;font-weight:600;color:var(--ok);display:flex;align-items:center;gap:5px;white-space:nowrap"><img src="${VB_IMG}" width="14" height="14" alt="" style="object-fit:contain">${m.quantidade} V-Bucks</div>
+              <div style="font-size:12px;color:var(--fg)">${m.tipo || 'Missão'}</div>
+              ${m.zona ? `<div style="font-size:11px;color:var(--muted)">${m.zona}${m.poder ? ` · <span class="pw">${BOLT_SVG}${m.poder}</span>` : ''}${m.biome ? ' · ' + m.biome : ''}</div>` : ''}
             </div>
           </div>`).join('').replace(/border-bottom[^;]+;([^}]*})?(?=<\/div>\s*$)/, '');
       } else {
@@ -1219,6 +1318,7 @@ document.getElementById('btnTrigger').addEventListener('click', async () => {
 
 // ── Load ──────────────────────────────────────────
 async function loadData() {
+  refreshUserUI();
   try {
     const [alertas, runs] = await Promise.all([fetchAlertas(), fetchRuns()]);
     renderToday(alertas.find(r => r.data === todayUTC()) || null);
@@ -1239,5 +1339,5 @@ if (session) {
   document.getElementById('btnTrigger').hidden = !session.pat;
   loadData();
 }
-setInterval(() => { if (getSession()) loadData(); }, 60_000);
+setInterval(() => { if (getSession()) loadData(); }, 30_000);
 </script>
