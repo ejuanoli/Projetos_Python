@@ -209,11 +209,8 @@ def main() -> None:
                 logging.info("Alerta de hoje já foi enviado anteriormente; encerrando sem reenvio.")
                 sys.exit(0)
             msg = f"Hoje ({hoje_fmt}) não há V-Bucks disponíveis no Salve o Mundo."
-            enviados = enviar_para_todos(msg)
-            if enviados > 0:
-                registrar_envio(hoje, "sem_vbucks")
-            else:
-                logging.error("Nenhum envio bem-sucedido.")
+            registrar_envio(hoje, "sem_vbucks")
+            enviar_para_todos(msg)
             sys.exit(0)
 
         try:
@@ -242,15 +239,13 @@ def main() -> None:
                         }
                         for a in alertas
                     ]
+                    registrar_envio(hoje, "vbucks", total, missoes_data)
                     enviados = enviar_para_todos(montar_mensagem(alertas))
-                    if enviados > 0:
-                        registrar_envio(hoje, "vbucks", total, missoes_data)
                     logging.info("Sucesso: %d V-Bucks, enviado para %d usuário(s).", total, enviados)
                 else:
                     msg = f"Hoje ({hoje_fmt}) não há V-Bucks disponíveis no Salve o Mundo."
+                    registrar_envio(hoje, "sem_vbucks")
                     enviados = enviar_para_todos(msg)
-                    if enviados > 0:
-                        registrar_envio(hoje, "sem_vbucks")
                     logging.info("Sem V-Bucks hoje; enviado para %d usuário(s).", enviados)
                 sys.exit(0)
 

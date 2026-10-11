@@ -486,7 +486,7 @@ body {
   <div class="mbox" style="border-radius:16px">
     <div style="text-align:center;margin-bottom:18px">
       <div class="hd-logo" style="font-size:22px;display:inline-flex;align-items:center;gap:8px;justify-content:center;margin-bottom:4px">
-        <img src="https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png" alt="V-Bucks" width="26" height="26" style="object-fit:contain">
+        <img id="ls-vb-icon" alt="V-Bucks" width="26" height="26" style="object-fit:contain">
         V-Bucks <span>Monitor</span>
       </div>
       <div style="font-size:12px;color:var(--muted)">Entre para continuar</div>
@@ -536,7 +536,7 @@ body {
       <!-- WhatsApp opcional -->
       <button type="button" class="wz-toggle" id="btnWzToggle">
         <span class="wz-toggle-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:var(--ok)"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M5.077 0C2.269 0 0 2.269 0 5.077c0 .898.235 1.741.645 2.477L.042 10l2.523-.643A5.057 5.057 0 0 0 5.077 10.154C7.885 10.154 10.154 7.885 10.154 5.077 10.154 2.269 7.885 0 5.077 0zm0 9.23c-.785 0-1.53-.211-2.17-.578L2.692 8.74l-.63.161.163-.624-.166-.214A4.144 4.144 0 0 1 .923 5.077c0-2.291 1.863-4.154 4.154-4.154S9.23 2.786 9.23 5.077 7.368 9.23 5.077 9.23z" transform="translate(7 7)"/></svg>
+          <img id="wz-toggle-wa-icon" alt="WhatsApp" width="16" height="16" style="object-fit:contain">
           Receber alertas no WhatsApp
         </span>
         <span class="wz-pill" id="wzPill">Opcional</span>
@@ -576,7 +576,7 @@ body {
 <div class="mbg" id="waSheet" hidden>
   <div class="mbox">
     <div class="m-title" style="display:flex;align-items:center;gap:8px">
-      <img src="https://img.magnific.com/vetores-premium/whatsapp-vector-logo-icon-logotipo-vector-midia-social_901408-406.jpg?semt=ais_hybrid&w=740&q=80" width="20" height="20" style="object-fit:contain;border-radius:4px" alt="WhatsApp">
+      <img id="wa-modal-icon" alt="WhatsApp" width="20" height="20" style="object-fit:contain">
       WhatsApp
     </div>
     <div class="m-sub" id="waSubtitle" style="margin-bottom:18px">Configure para receber alertas diários.</div>
@@ -631,17 +631,17 @@ body {
 <!-- Header -->
 <div class="hd">
   <div class="hd-logo">
-    <img src="https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png" alt="V" width="22" height="22" style="object-fit:contain;flex-shrink:0">
+    <img id="hd-vb-icon" alt="V" width="22" height="22" style="object-fit:contain;flex-shrink:0">
     V-Bucks <span>Monitor</span>
   </div>
-  <button type="button" class="btn btn-ghost" id="btnWa" title="WhatsApp" style="min-width:44px;padding:0 12px">
-    <img src="https://img.magnific.com/vetores-premium/whatsapp-vector-logo-icon-logotipo-vector-midia-social_901408-406.jpg?semt=ais_hybrid&w=740&q=80" width="18" height="18" style="object-fit:contain;border-radius:3px" alt="WhatsApp">
-  </button>
   <button type="button" class="btn btn-primary" id="btnTrigger" title="Disparar" style="min-width:44px;padding:0 14px" hidden>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
   </button>
   <button type="button" class="btn btn-ghost" id="btnRefresh" title="Atualizar" style="min-width:44px;padding:0 12px">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+  </button>
+  <button type="button" class="btn btn-ghost" id="btnWa" title="WhatsApp" style="min-width:44px;padding:0 12px">
+    <img id="hd-wa-icon" alt="WhatsApp" width="20" height="20" style="object-fit:contain">
   </button>
   <button type="button" class="btn btn-ghost" id="btnCfg" title="Sair" style="min-width:40px;padding:0 10px">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -669,7 +669,7 @@ body {
 
 <!-- Legend (only for Disparos) -->
 <div class="legend" id="legend" style="margin-top:6px">
-  <div class="li"><img class="vb-coin" src="https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png" width="11" height="11" alt="V-Bucks">V-Bucks</div>
+  <div class="li"><img id="legend-vb-icon" class="vb-coin" width="11" height="11" alt="V-Bucks">V-Bucks</div>
   <div class="li"><div class="ld no"></div>Sem V-Bucks</div>
   <div class="li"><div class="ld"></div>Sem registro</div>
 </div>
@@ -694,7 +694,16 @@ const SB_URL  = 'https://otytppcftpqtdpmfxkic.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90eXRwcGNmdHBxdGRwbWZ4a2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5ODEyMzAsImV4cCI6MjEwNjU1NzIzMH0.l7WiV2gIGAR02F4mRukKtzse1X3qfXSAp9j9QZFGZ5w';
 const REPO    = 'ejuanoli/Projetos_Python';
 const WF      = 'vbucks_alert.yml';
-const VB_IMG  = 'https://www.nicepng.com/png/full/194-1940355_fortnite-v-bucks-service-v-bucks.png';
+const VB_IMG  = 'data:image/png;base64,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';
+const WA_ICON = 'data:image/png;base64,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';
+
+// Set icon srcs from embedded data
+(function() {
+  const vbIds = ['hd-vb-icon','ls-vb-icon','legend-vb-icon'];
+  const waIds = ['hd-wa-icon','wa-modal-icon','wz-toggle-wa-icon'];
+  vbIds.forEach(id => { const el = document.getElementById(id); if (el) el.src = VB_IMG; });
+  waIds.forEach(id => { const el = document.getElementById(id); if (el) el.src = WA_ICON; });
+})();
 
 // ── Sessão ────────────────────────────────────────
 const SESSION_KEY = 'vbm_session';
