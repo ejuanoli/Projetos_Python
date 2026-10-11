@@ -123,6 +123,13 @@ body {
   background: var(--ok-dim); color: var(--ok);
   display: flex; align-items: center; justify-content: center;
 }
+#profileSheet .mbox { position: relative; }
+.field textarea {
+  width: 100%; padding: 11px 13px; resize: none;
+  background: var(--surf2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--fg);
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+}
 .pw { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
 
 .btn {
@@ -640,18 +647,33 @@ body {
 <!-- Modal de perfil -->
 <div class="mbg" id="profileSheet" hidden>
   <div class="mbox">
+    <button type="button" id="btnProfClose" aria-label="Fechar" style="position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:26px;line-height:1;cursor:pointer;padding:6px 10px">&times;</button>
     <div class="avatar" id="profAvatar"></div>
-    <div class="m-title" id="profName" style="text-align:center"></div>
-    <div class="m-sub" id="profSub" style="text-align:center"></div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px">
+      <button type="button" class="btn btn-ghost" id="btnAvatarPick" style="min-height:34px;font-size:12px">Alterar foto</button>
+      <button type="button" class="btn btn-ghost" id="btnAvatarRemove" style="min-height:34px;font-size:12px;display:none">Remover</button>
+    </div>
     <input type="file" id="avatarFile" accept="image/*" hidden>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <button type="button" class="btn btn-ghost" id="btnAvatarPick" style="min-height:44px">Alterar foto de perfil</button>
-      <button type="button" class="btn btn-ghost" id="btnAvatarRemove" style="min-height:44px;display:none">Remover foto</button>
+    <div class="m-title" id="profName" style="text-align:center"></div>
+    <div class="m-sub" id="profSub" style="text-align:center;margin-bottom:4px"></div>
+    <div class="m-sub" id="profSince" style="text-align:center;font-size:11px;margin-bottom:18px"></div>
+
+    <div class="field">
+      <label for="profDisplay">Nome de exibição</label>
+      <input type="text" id="profDisplay" maxlength="40" placeholder="Como quer ser chamado">
+    </div>
+    <div class="field">
+      <label for="profBio">Sobre mim <span id="bioCount" style="float:right;font-weight:400">0/160</span></label>
+      <textarea id="profBio" maxlength="160" rows="3" placeholder="Uma frase sobre você"></textarea>
+    </div>
+    <div id="profMsg" style="font-size:12px;margin-bottom:10px;display:none"></div>
+    <button type="button" class="btn btn-primary" id="btnProfSave" style="width:100%;min-height:44px;margin-bottom:14px">Salvar perfil</button>
+
+    <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:14px">
       <button type="button" class="btn btn-ghost" id="btnWa" style="min-height:44px;gap:8px">
         <img id="hd-wa-icon" alt="" width="20" height="20" style="object-fit:contain">WhatsApp
       </button>
       <button type="button" class="btn btn-ghost" id="btnCfg" style="min-height:44px;color:var(--no);border-color:var(--no)">Sair da conta</button>
-      <button type="button" class="btn btn-ghost" id="btnProfClose" style="min-height:44px;border:none">Fechar</button>
     </div>
   </div>
 </div>
@@ -905,11 +927,53 @@ function refreshUserUI() {
   document.getElementById('profAvatar').innerHTML = av ? `<img src="${av}" alt="">` : USER_SVG.replace('width="18" height="18"', 'width="40" height="40"');
   document.getElementById('btnAvatarRemove').style.display = av ? 'flex' : 'none';
   const s = getSession();
-  document.getElementById('profName').textContent = s ? s.username : '';
-  document.getElementById('profSub').textContent = s ? (s.pat ? 'Administrador' : 'Usuário') + (s.tem_whatsapp ? ' · WhatsApp ativo' : ' · Sem WhatsApp') : '';
+  const p = getProfile();
+  document.getElementById('profName').textContent = s ? (p.nome || s.username) : '';
+  document.getElementById('profSub').textContent = s ? '@' + s.username + ' · ' + (s.pat ? 'Administrador' : 'Usuário') + (s.tem_whatsapp ? ' · WhatsApp ativo' : ' · Sem WhatsApp') : '';
+  document.getElementById('profSince').textContent = p.criado_em
+    ? 'Membro desde ' + new Date(p.criado_em).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+    : '';
 }
-document.getElementById('btnUser').addEventListener('click', () => { refreshUserUI(); profileSheet.hidden = false; });
-document.getElementById('btnProfClose').addEventListener('click', () => { profileSheet.hidden = true; });
+function getProfile() {
+  try { return JSON.parse(localStorage.getItem('vbm_profile_' + (getSession()?.username || '').toLowerCase()) || '{}'); } catch { return {}; }
+}
+function fillProfileForm() {
+  const p = getProfile();
+  document.getElementById('profDisplay').value = p.nome || '';
+  document.getElementById('profBio').value = p.bio || '';
+  document.getElementById('bioCount').textContent = (p.bio || '').length + '/160';
+  document.getElementById('profMsg').style.display = 'none';
+}
+function openProfile() { refreshUserUI(); fillProfileForm(); profileSheet.hidden = false; }
+function closeProfile() { profileSheet.hidden = true; }
+document.getElementById('btnUser').addEventListener('click', openProfile);
+document.getElementById('btnProfClose').addEventListener('click', closeProfile);
+profileSheet.addEventListener('click', e => { if (e.target === profileSheet) closeProfile(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !profileSheet.hidden) closeProfile(); });
+document.getElementById('profBio').addEventListener('input', e => {
+  document.getElementById('bioCount').textContent = e.target.value.length + '/160';
+});
+document.getElementById('btnProfSave').addEventListener('click', async () => {
+  const s = getSession();
+  if (!s) return;
+  const btn = document.getElementById('btnProfSave');
+  const msg = document.getElementById('profMsg');
+  const nome = document.getElementById('profDisplay').value.trim();
+  const bio = document.getElementById('profBio').value.trim();
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    const res = await rpcAvatar('atualizar_perfil', { p_username: s.username, p_nome: nome || null, p_bio: bio || null });
+    if (res && res.erro) throw new Error(res.erro);
+    const p = { ...getProfile(), nome, bio };
+    try { localStorage.setItem('vbm_profile_' + s.username.toLowerCase(), JSON.stringify(p)); } catch {}
+    refreshUserUI();
+    msg.style.color = 'var(--ok)'; msg.textContent = 'Perfil salvo.';
+  } catch (e) {
+    msg.style.color = 'var(--no)'; msg.textContent = 'Não foi possível salvar: ' + e.message;
+  }
+  msg.style.display = 'block';
+  btn.disabled = false; btn.textContent = 'Salvar perfil';
+});
 document.getElementById('btnAvatarPick').addEventListener('click', () => document.getElementById('avatarFile').click());
 async function rpcAvatar(fn, body) {
   const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
@@ -939,10 +1003,14 @@ async function syncAvatar() {
   const s = getSession();
   if (!s || avatarSynced) return;
   try {
-    const av = await rpcAvatar('obter_avatar', { p_username: s.username });
+    const perfil = await rpcAvatar('obter_perfil', { p_username: s.username });
     avatarSynced = true;
+    const av = perfil && perfil.avatar;
     try {
       if (av) localStorage.setItem(avatarKey(), av); else localStorage.removeItem(avatarKey());
+      localStorage.setItem('vbm_profile_' + s.username.toLowerCase(), JSON.stringify({
+        nome: perfil?.nome || '', bio: perfil?.bio || '', criado_em: perfil?.criado_em || null
+      }));
     } catch {}
     refreshUserUI();
   } catch {}
