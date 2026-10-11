@@ -48,7 +48,7 @@ INTERVALO_RETRY = 30
 # ---------------------------------------------------------------------------
 
 def _supabase_headers() -> dict:
-    key = os.environ.get("SUPABASE_KEY", "")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY", "")
     return {
         "apikey": key,
         "Authorization": f"Bearer {key}",
