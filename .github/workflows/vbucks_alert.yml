@@ -1,13 +1,22 @@
 name: Alertas V-Bucks Salve o Mundo
 
 on:
-  # 23:54 UTC = 20:54 BRT — inicia 5 min antes para absorver atrasos do GitHub Actions
-  # O script tem timeout interno de 11 min, cobrindo até 21:10 BRT (00:10 UTC)
+  # A rotação diária muda às 00:00 UTC (21:00 BRT). O script só envia depois que a rotação do dia
+  # novo aparece, então o primeiro disparo é logo após a virada. O GitHub atrasa crons agendados
+  # (às vezes por horas), por isso há disparos de reserva: o script é idempotente (checa o Supabase)
+  # e a concorrência abaixo impede envios duplicados.
   schedule:
-    - cron: "54 23 * * *"
+    - cron: "3 0 * * *"    # 21:03 BRT
+    - cron: "18 0 * * *"   # 21:18 BRT (reserva)
+    - cron: "38 0 * * *"   # 21:38 BRT (reserva)
+    - cron: "8 1 * * *"    # 22:08 BRT (reserva)
 
-  # Permite disparar manualmente caso o agendamento atrase demais
+  # Permite disparar manualmente
   workflow_dispatch:
+
+concurrency:
+  group: vbucks-alert
+  cancel-in-progress: false
 
 jobs:
   verificar-vbucks:
